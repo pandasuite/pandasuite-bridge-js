@@ -1,0 +1,39 @@
+{
+  "name": "pandasuite-bridge",
+  "version": "4.1.0",
+  "description": "",
+  "main": "lib/pandasuite-bridge.js",
+  "scripts": {
+    "build": "babel --plugins transform-es2015-classes src/index.js > lib/pandasuite-bridge.js && terser --compress --mangle --output lib/pandasuite-bridge.js -- lib/pandasuite-bridge.js",
+    "release": "npm run build && release-it"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pandasuite/pandasuite-bridge-js.git"
+  },
+  "author": "pandasuite",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pandasuite/pandasuite-bridge-js/issues"
+  },
+  "homepage": "https://github.com/pandasuite/pandasuite-bridge-js#readme",
+  "release-it": {
+    "github": {
+      "release": true,
+      "assets": [
+        "lib/pandasuite-bridge.js"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.6",
+    "babel-plugin-transform-es2015-classes": "^6.24.1",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.20.1",
+    "release-it": "^12.6.2",
+    "terser": "^4.6.4"
+  }
+}
