@@ -3,6 +3,7 @@
   "version": "4.1.1",
   "description": "",
   "main": "lib/pandasuite-bridge.js",
+  "types": "pandasuite-bridge.d.ts",
   "scripts": {
     "build": "babel --plugins transform-es2015-classes src/index.js > lib/pandasuite-bridge.js && terser --compress --mangle --output lib/pandasuite-bridge.js -- lib/pandasuite-bridge.js",
     "release": "npm run build && release-it"
