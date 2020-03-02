@@ -16,6 +16,12 @@ PandaBridge.markers = [];
 
 PandaBridge.isCoreInitialized = false;
 
+PandaBridge.INITIALIZE = '__ps_initialize';
+PandaBridge.SYNCHRONIZE = 'synchronize';
+PandaBridge.GET_SNAPSHOT_DATA = '__ps_getSnapshotData';
+PandaBridge.SET_SNAPSHOT_DATA = '__ps_setSnapshotData';
+PandaBridge.SNAPSHOT_DATA_RESULT = '__ps_snapshotDataResult';
+
 function isIOS() {
   return (
     (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream)
@@ -199,7 +205,7 @@ PandaBridge.unlisten = function unlisten(arg1, arg2) {
 
 /* Shortcut */
 
-PandaBridge.listen('__ps_initialize', (args) => {
+PandaBridge.listen(PandaBridge.INITIALIZE, (args) => {
   PandaBridge.isCoreInitialized = true;
 
   args = args || [];
@@ -230,13 +236,13 @@ PandaBridge.onLoad = function onLoad(callBack) {
 };
 
 PandaBridge.getSnapshotData = function getSnapshotData(callBack) {
-  PandaBridge.listen('__ps_getSnapshotData', (args) => {
-    PandaBridge.send('__ps_snapshotDataResult', [callBack(args)]);
+  PandaBridge.listen(PandaBridge.GET_SNAPSHOT_DATA, (args) => {
+    PandaBridge.send(PandaBridge.SNAPSHOT_DATA_RESULT, [callBack(args)]);
   });
 };
 
 PandaBridge.setSnapshotData = function setSnapshotData(callBack) {
-  PandaBridge.listen('__ps_setSnapshotData', (args) => {
+  PandaBridge.listen(PandaBridge.SET_SNAPSHOT_DATA, (args) => {
     args = args || [];
     callBack({
       data: args[0] || {},
@@ -253,11 +259,11 @@ PandaBridge.getScreenshot = function getScreenshot(callBack) {
 
 PandaBridge.synchronize = function synchronize(arg1, arg2) {
   if (typeof arg1 === 'function') {
-    PandaBridge.listen('synchronize', (args) => {
+    PandaBridge.listen(PandaBridge.SYNCHRONIZE, (args) => {
       arg1(args[0]);
     });
   } else if (typeof arg2 === 'function') {
-    PandaBridge.listen('synchronize', (args) => {
+    PandaBridge.listen(PandaBridge.SYNCHRONIZE, (args) => {
       if ((args || [])[1] === arg1) {
         arg2(args[0]);
       }
