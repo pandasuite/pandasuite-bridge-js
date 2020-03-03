@@ -1,6 +1,6 @@
 {
   "name": "pandasuite-bridge",
-  "version": "4.1.4",
+  "version": "4.1.5",
   "description": "",
   "main": "lib/pandasuite-bridge.js",
   "types": "pandasuite-bridge.d.ts",
