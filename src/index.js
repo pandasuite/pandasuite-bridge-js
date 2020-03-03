@@ -18,6 +18,8 @@ PandaBridge.isCoreInitialized = false;
 
 PandaBridge.INITIALIZE = '__ps_initialize';
 PandaBridge.SYNCHRONIZE = 'synchronize';
+PandaBridge.TRIGGER_MARKER = 'triggerMarker';
+
 PandaBridge.GET_SNAPSHOT_DATA = '__ps_getSnapshotData';
 PandaBridge.SET_SNAPSHOT_DATA = '__ps_setSnapshotData';
 PandaBridge.SNAPSHOT_DATA_RESULT = '__ps_snapshotDataResult';
