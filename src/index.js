@@ -220,6 +220,7 @@ PandaBridge.listen(PandaBridge.INITIALIZE, (args) => {
     PandaBridge.loadCallBack({
       properties: PandaBridge.properties,
       markers: PandaBridge.markers,
+      resources: PandaBridge.resources,
     });
     PandaBridge.loadCallBack = null;
   }
@@ -232,6 +233,7 @@ PandaBridge.onLoad = function onLoad(callBack) {
     PandaBridge.loadCallBack({
       properties: PandaBridge.properties,
       markers: PandaBridge.markers,
+      resources: PandaBridge.resources,
     });
     PandaBridge.loadCallBack = null;
   }
