@@ -260,7 +260,10 @@ PandaBridge.setSnapshotData = function setSnapshotData(callBack) {
 
 PandaBridge.getScreenshot = function getScreenshot(callBack) {
   PandaBridge.listen(PandaBridge.GET_SCREENSHOT, (args) => {
-    PandaBridge.send(PandaBridge.SCREENSHOT_RESULT, [callBack(args)]);
+    const resultCallback = (result) => {
+      PandaBridge.send(PandaBridge.SCREENSHOT_RESULT, [result]);
+    };
+    callBack(resultCallback, args);
   });
 };
 
