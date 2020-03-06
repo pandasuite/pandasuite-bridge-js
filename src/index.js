@@ -24,6 +24,9 @@ PandaBridge.GET_SNAPSHOT_DATA = '__ps_getSnapshotData';
 PandaBridge.SET_SNAPSHOT_DATA = '__ps_setSnapshotData';
 PandaBridge.SNAPSHOT_DATA_RESULT = '__ps_snapshotDataResult';
 
+PandaBridge.GET_SCREENSHOT = '__ps_getScreenshot';
+PandaBridge.SCREENSHOT_RESULT = '__ps_screenshotResult';
+
 function isIOS() {
   return (
     (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream)
@@ -256,8 +259,8 @@ PandaBridge.setSnapshotData = function setSnapshotData(callBack) {
 };
 
 PandaBridge.getScreenshot = function getScreenshot(callBack) {
-  PandaBridge.listen('__ps_getScreenshot', (args) => {
-    PandaBridge.send('__ps_screenshotResult', [callBack(args)]);
+  PandaBridge.listen(PandaBridge.GET_SCREENSHOT, (args) => {
+    PandaBridge.send(PandaBridge.SCREENSHOT_RESULT, [callBack(args)]);
   });
 };
 
