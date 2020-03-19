@@ -1,4 +1,8 @@
 /* eslint-disable no-param-reassign */
+
+const filter = require('lodash/filter');
+const find = require('lodash/find');
+
 const PandaBridge = function PandaBridge() {};
 
 PandaBridge.initCallBack = null;
@@ -19,6 +23,9 @@ PandaBridge.isCoreInitialized = false;
 PandaBridge.INITIALIZE = '__ps_initialize';
 PandaBridge.SYNCHRONIZE = 'synchronize';
 PandaBridge.TRIGGER_MARKER = 'triggerMarker';
+
+PandaBridge.STUDIO = '__ps_studio';
+PandaBridge.LANGUAGE = '__ps_language';
 
 PandaBridge.GET_SNAPSHOT_DATA = '__ps_getSnapshotData';
 PandaBridge.SET_SNAPSHOT_DATA = '__ps_setSnapshotData';
@@ -79,8 +86,11 @@ function connectWebViewJavascriptBridge(callback) {
       'message',
       (event) => {
         if (event.data === 'PandaJavascriptBridgeReady') {
-          PandaBridge.listen('__ps_studio', () => {
+          PandaBridge.listen(PandaBridge.STUDIO, () => {
             PandaBridge.isStudio = true;
+          });
+          PandaBridge.listen(PandaBridge.LANGUAGE, (args) => {
+            PandaBridge.currentLanguage = args && args.language;
           });
           callback({
             init(receiveCallBack) {
@@ -282,13 +292,17 @@ PandaBridge.synchronize = function synchronize(arg1, arg2) {
 };
 
 PandaBridge.resolvePath = function resolvePath(id, def) {
-  let resource = null;
+  const resources = filter(PandaBridge.resources,
+    (resource) => resource.id === id && resource.path);
+  let resource = resources && resources[0];
 
-  PandaBridge.resources.forEach((r) => {
-    if (r.id === id) {
-      resource = r;
+  if (resource && resource.language && PandaBridge.currentLanguage) {
+    const localizedResource = find(resources, (r) => r.language === PandaBridge.currentLanguage);
+
+    if (localizedResource) {
+      resource = localizedResource;
     }
-  });
+  }
 
   if (resource) {
     return resource.path;

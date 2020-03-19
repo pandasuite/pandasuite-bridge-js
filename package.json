@@ -38,5 +38,7 @@
     "release-it": "^12.6.2",
     "terser": "^4.6.4"
   },
-  "dependencies": {}
+  "dependencies": {
+    "lodash": "^4.17.15"
+  }
 }
