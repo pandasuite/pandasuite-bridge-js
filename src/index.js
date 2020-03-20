@@ -296,7 +296,7 @@ PandaBridge.resolvePath = function resolvePath(id, def) {
     (resource) => resource.id === id && resource.path);
   let resource = resources && resources[0];
 
-  if (resource && resource.language && PandaBridge.currentLanguage) {
+  if (resource && PandaBridge.currentLanguage) {
     const localizedResource = find(resources, (r) => r.language === PandaBridge.currentLanguage);
 
     if (localizedResource) {
