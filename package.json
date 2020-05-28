@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "types": "pandasuite-bridge.d.ts",
   "scripts": {
-    "build": "babel src/index.js > lib/pandasuite-bridge.js && sed -i '' 's/mod.exports;/mod.exports.default;/g' lib/pandasuite-bridge.js && terser --compress --mangle --output lib/pandasuite-bridge.js -- lib/pandasuite-bridge.js",
+    "build": "babel src/index.js > lib/pandasuite-bridge.js && sed -i '' 's/mod.exports;/mod.exports.default;/g' lib/pandasuite-bridge.js && terser --compress --mangle --output lib/pandasuite-bridge.min.js -- lib/pandasuite-bridge.js",
     "release": "npm run build && release-it"
   },
   "repository": {
@@ -19,10 +19,14 @@
   },
   "homepage": "https://github.com/pandasuite/pandasuite-bridge-js#readme",
   "release-it": {
+    "git": {
+      "requireCleanWorkingDir": false
+    },
     "github": {
       "release": true,
       "assets": [
-        "lib/pandasuite-bridge.js"
+        "lib/pandasuite-bridge.js",
+        "lib/pandasuite-bridge.min.js"
       ]
     }
   },
