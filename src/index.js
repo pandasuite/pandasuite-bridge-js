@@ -1,8 +1,5 @@
 /* eslint-disable no-param-reassign */
 
-const filter = require('lodash/filter');
-const find = require('lodash/find');
-
 const PandaBridge = function PandaBridge() {};
 
 PandaBridge.initCallBack = null;
@@ -292,12 +289,13 @@ PandaBridge.synchronize = function synchronize(arg1, arg2) {
 };
 
 PandaBridge.resolvePath = function resolvePath(id, def) {
-  const resources = filter(PandaBridge.resources,
-    (resource) => resource.id === id && resource.path);
+  const resources = PandaBridge.resources.filter(
+    (resource) => resource.id === id && resource.path,
+  );
   let resource = resources && resources[0];
 
   if (resource && PandaBridge.currentLanguage) {
-    const localizedResource = find(resources, (r) => r.language === PandaBridge.currentLanguage);
+    const localizedResource = resources.find((r) => r.language === PandaBridge.currentLanguage);
 
     if (localizedResource) {
       resource = localizedResource;
@@ -311,3 +309,40 @@ PandaBridge.resolvePath = function resolvePath(id, def) {
 };
 
 export default PandaBridge;
+
+if (!Array.prototype.find) {
+  // eslint-disable-next-line no-extend-native
+  Object.defineProperty(Array.prototype, 'find', {
+    value(predicate) {
+      if (this == null) {
+        throw TypeError('"this" is null or not defined');
+      }
+
+      const o = Object(this);
+
+      // eslint-disable-next-line no-bitwise
+      const len = o.length >>> 0;
+
+      if (typeof predicate !== 'function') {
+        throw TypeError('predicate must be a function');
+      }
+
+      // eslint-disable-next-line prefer-rest-params
+      const thisArg = arguments[1];
+
+      let k = 0;
+
+      while (k < len) {
+        const kValue = o[k];
+        if (predicate.call(thisArg, kValue, k, o)) {
+          return kValue;
+        }
+        // eslint-disable-next-line no-plusplus
+        k++;
+      }
+      return undefined;
+    },
+    configurable: true,
+    writable: true,
+  });
+}
