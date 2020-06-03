@@ -4,6 +4,7 @@ const PandaBridge = function PandaBridge() {};
 
 PandaBridge.initCallBack = null;
 PandaBridge.loadCallBack = null;
+PandaBridge.updateCallBack = null;
 
 PandaBridge.globalReceive = [];
 PandaBridge.eventReceive = {};
@@ -18,6 +19,7 @@ PandaBridge.markers = [];
 PandaBridge.isCoreInitialized = false;
 
 PandaBridge.INITIALIZE = '__ps_initialize';
+PandaBridge.UPDATE = '__ps_update';
 PandaBridge.SYNCHRONIZE = 'synchronize';
 PandaBridge.TRIGGER_MARKER = 'triggerMarker';
 
@@ -247,6 +249,26 @@ PandaBridge.onLoad = function onLoad(callBack) {
     });
     PandaBridge.loadCallBack = null;
   }
+};
+
+PandaBridge.listen(PandaBridge.UPDATE, (args) => {
+  args = args || [];
+
+  PandaBridge.resources = args[2] || [];
+  PandaBridge.properties = args[0] || {};
+  PandaBridge.markers = args[1] || [];
+
+  if (PandaBridge.updateCallBack) {
+    PandaBridge.updateCallBack({
+      properties: PandaBridge.properties,
+      markers: PandaBridge.markers,
+      resources: PandaBridge.resources,
+    });
+  }
+});
+
+PandaBridge.onUpdate = function onUpdate(callBack) {
+  PandaBridge.updateCallBack = callBack;
 };
 
 PandaBridge.getSnapshotData = function getSnapshotData(callBack) {
