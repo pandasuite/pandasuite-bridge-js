@@ -22,6 +22,8 @@ PandaBridge.INITIALIZE = '__ps_initialize';
 PandaBridge.UPDATE = '__ps_update';
 PandaBridge.SYNCHRONIZE = 'synchronize';
 PandaBridge.TRIGGER_MARKER = 'triggerMarker';
+PandaBridge.INITIALIZED = '__ps_initialized';
+PandaBridge.UPDATED = '__ps_updated';
 
 PandaBridge.STUDIO = '__ps_studio';
 PandaBridge.LANGUAGE = '__ps_language';
