@@ -299,6 +299,10 @@ PandaBridge.getScreenshot = function getScreenshot(callBack) {
   });
 };
 
+PandaBridge.takeScreenshot = function takeScreenshot() {
+  executeHook(PandaBridge.GET_SCREENSHOT, null);
+};
+
 PandaBridge.synchronize = function synchronize(arg1, arg2) {
   if (typeof arg1 === 'function') {
     PandaBridge.listen(PandaBridge.SYNCHRONIZE, (args) => {
