@@ -9,6 +9,8 @@ PandaBridge.updateCallBack = null;
 PandaBridge.globalReceive = [];
 PandaBridge.eventReceive = {};
 
+PandaBridge.waitingSend = [];
+
 PandaBridge.bridge = null;
 PandaBridge.isStudio = false;
 
@@ -169,6 +171,11 @@ connectWebViewJavascriptBridge((bridge) => {
     // eslint-disable-next-line no-empty
     } catch (e) {}
   });
+
+  PandaBridge.waitingSend.forEach((stringify) => {
+    PandaBridge.bridge.send.call(PandaBridge.bridge, stringify);
+  });
+  PandaBridge.waitingSend = [];
 });
 
 PandaBridge.init = function init(callBack) {
@@ -179,13 +186,15 @@ PandaBridge.init = function init(callBack) {
 };
 
 PandaBridge.send = function send(event, args) {
-  if (PandaBridge.bridge) {
-    try {
-      const stringify = JSON.stringify({ event, args });
+  try {
+    const stringify = JSON.stringify({ event, args });
+    if (PandaBridge.bridge) {
       PandaBridge.bridge.send.call(PandaBridge.bridge, stringify);
-    // eslint-disable-next-line no-empty
-    } catch (e) {}
-  }
+    } else {
+      PandaBridge.waitingSend.push(stringify);
+    }
+  // eslint-disable-next-line no-empty
+  } catch (e) {}
 };
 
 /* General events handling */
