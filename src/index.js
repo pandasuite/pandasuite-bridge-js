@@ -34,9 +34,13 @@ PandaBridge.UNIQUE_ID = '__ps_id';
 PandaBridge.GET_SNAPSHOT_DATA = '__ps_getSnapshotData';
 PandaBridge.SET_SNAPSHOT_DATA = '__ps_setSnapshotData';
 PandaBridge.SNAPSHOT_DATA_RESULT = '__ps_snapshotDataResult';
+PandaBridge.OPEN_URL = '__ps_openUrl';
 
 PandaBridge.GET_SCREENSHOT = '__ps_getScreenshot';
 PandaBridge.SCREENSHOT_RESULT = '__ps_screenshotResult';
+
+PandaBridge.PANDASUITE_HOST_WITH_SCHEME = '__ps_pandasuiteHostWithScheme';
+PandaBridge.PANDASUITE_DATA_HOST_WITH_SCHEME = '__ps_pandasuiteDataHostWithScheme';
 
 function isIOS() {
   return (
@@ -310,6 +314,10 @@ PandaBridge.getScreenshot = function getScreenshot(callBack) {
 
 PandaBridge.takeScreenshot = function takeScreenshot() {
   executeHook(PandaBridge.GET_SCREENSHOT, null);
+};
+
+PandaBridge.openUrl = function openUrl(url) {
+  PandaBridge.send(PandaBridge.OPEN_URL, [url]);
 };
 
 PandaBridge.synchronize = function synchronize(arg1, arg2) {
