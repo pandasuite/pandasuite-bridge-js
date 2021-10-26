@@ -1,5 +1,11 @@
 /* eslint-disable no-param-reassign */
 
+import isArray from 'lodash/isArray';
+import isObject from 'lodash/isObject';
+import map from 'lodash/map';
+import fromPairs from 'lodash/fromPairs';
+import startsWith from 'lodash/startsWith';
+
 const PandaBridge = function PandaBridge() {};
 
 PandaBridge.initCallBack = null;
@@ -352,6 +358,56 @@ PandaBridge.resolvePath = function resolvePath(id, def) {
     return resource.path;
   }
   return def;
+};
+
+const blobToDataURL = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+
+  reader.onloadend = () => {
+    if (reader.error) {
+      reject(reader.error);
+    } else {
+      resolve(reader.result);
+    }
+  };
+  reader.readAsDataURL(blob);
+});
+
+PandaBridge.resolveTypes = async function resolveTypes(value) {
+  if (isArray(value)) {
+    return Promise.all(map(value, (v) => this.resolveTypes(v)));
+  }
+  if (isObject(value)) {
+    const { type, value: resourceValue } = value;
+
+    if (type === 'Image' || type === 'Audio' || type === 'Video') {
+      // convert local resources to data urls
+      if (!startsWith(resourceValue, 'http')) {
+        try {
+          const blob = await fetch(resourceValue).then((r) => {
+            if (r.ok) {
+              return r.blob();
+            }
+            throw new Error();
+          });
+          return {
+            type,
+            value: await blobToDataURL(blob),
+          };
+        } catch (e) {
+          return {
+            type,
+            value: null,
+          };
+        }
+      }
+      return value;
+    }
+    return fromPairs(
+      await Promise.all(map(value, async (v, k) => [k, await this.resolveTypes(v)])),
+    );
+  }
+  return value;
 };
 
 export default PandaBridge;
