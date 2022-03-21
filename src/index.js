@@ -340,7 +340,7 @@ PandaBridge.synchronize = function synchronize(arg1, arg2) {
   }
 };
 
-PandaBridge.resolvePath = function resolvePath(id, def) {
+PandaBridge.resolveResource = function resolveResource(id) {
   const resources = PandaBridge.resources.filter(
     (resource) => resource.id === id && resource.path,
   );
@@ -354,7 +354,25 @@ PandaBridge.resolvePath = function resolvePath(id, def) {
     }
   }
 
+  return resource;
+};
+
+PandaBridge.resolvePath = function resolvePath(id, def) {
+  const resource = PandaBridge.resolveResource(id);
+
   if (resource) {
+    return resource.path;
+  }
+  return def;
+};
+
+PandaBridge.resolveImagePath = function resolveImagePath(id, size, def) {
+  const resource = PandaBridge.resolveResource(id);
+
+  if (resource) {
+    if (resource.srcsets && resource.srcsets[size]) {
+      return resource.srcsets[size];
+    }
     return resource.path;
   }
   return def;
