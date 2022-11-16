@@ -60,7 +60,7 @@ function connectWebViewJavascriptBridge(callback) {
     callback(window.WebViewJavascriptBridge);
 
     /* Android */
-  } else if (window.WebViewAndroidBridge) {
+  } else if (window.WebViewAndroidBridge && window === window.top) {
     callback({
       init(receiveCallBack) {
         window.sendMessage = function sendMessage(message) {
