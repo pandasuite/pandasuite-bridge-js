@@ -37,6 +37,7 @@ PandaBridge.STUDIO = '__ps_studio';
 PandaBridge.LANGUAGE = '__ps_language';
 PandaBridge.UNIQUE_ID = '__ps_id';
 PandaBridge.BINDABLE = '__ps_bindable';
+PandaBridge.SCREENS = '__ps_screens';
 
 PandaBridge.GET_SNAPSHOT_DATA = '__ps_getSnapshotData';
 PandaBridge.SET_SNAPSHOT_DATA = '__ps_setSnapshotData';
