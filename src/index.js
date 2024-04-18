@@ -48,12 +48,13 @@ PandaBridge.GET_SCREENSHOT = '__ps_getScreenshot';
 PandaBridge.SCREENSHOT_RESULT = '__ps_screenshotResult';
 
 PandaBridge.PANDASUITE_HOST_WITH_SCHEME = '__ps_pandasuiteHostWithScheme';
-PandaBridge.PANDASUITE_DATA_HOST_WITH_SCHEME = '__ps_pandasuiteDataHostWithScheme';
+PandaBridge.PANDASUITE_DATA_HOST_WITH_SCHEME =
+  '__ps_pandasuiteDataHostWithScheme';
 
 function isIOS() {
   return (
-    (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream)
-    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   );
 }
 
@@ -150,9 +151,9 @@ function executeHook(event, args) {
 connectWebViewJavascriptBridge((bridge) => {
   /* This is only for the new IOS bridge */
   if (
-    window.WebViewJavascriptBridge
-    && bridge === window.WebViewJavascriptBridge
-    && window.WebViewJavascriptBridge.send === undefined
+    window.WebViewJavascriptBridge &&
+    bridge === window.WebViewJavascriptBridge &&
+    window.WebViewJavascriptBridge.send === undefined
   ) {
     bridge = {
       init: (function initClosure(internalBridge) {
@@ -161,12 +162,12 @@ connectWebViewJavascriptBridge((bridge) => {
             receiveCallBack(data);
           });
         };
-      }(bridge)),
+      })(bridge),
       send: (function sendClosure(internalBridge) {
         return function send(message) {
           internalBridge.callHandler('message', message);
         };
-      }(bridge)),
+      })(bridge),
     };
   }
 
@@ -180,7 +181,7 @@ connectWebViewJavascriptBridge((bridge) => {
     try {
       const parsed = JSON.parse(message);
       executeHook(parsed.event, parsed.args);
-    // eslint-disable-next-line no-empty
+      // eslint-disable-next-line no-empty
     } catch (e) {}
   });
 
@@ -205,7 +206,7 @@ PandaBridge.send = function send(event, args) {
     } else {
       PandaBridge.waitingSend.push(stringify);
     }
-  // eslint-disable-next-line no-empty
+    // eslint-disable-next-line no-empty
   } catch (e) {}
 };
 
@@ -349,7 +350,9 @@ PandaBridge.resolveResource = function resolveResource(id) {
   let resource = resources && resources[0];
 
   if (resource && PandaBridge.currentLanguage) {
-    const localizedResource = resources.find((r) => r.language === PandaBridge.currentLanguage);
+    const localizedResource = resources.find(
+      (r) => r.language === PandaBridge.currentLanguage,
+    );
 
     if (localizedResource) {
       resource = localizedResource;
@@ -380,18 +383,19 @@ PandaBridge.resolveImagePath = function resolveImagePath(id, size, def) {
   return def;
 };
 
-const blobToDataURL = (blob) => new Promise((resolve, reject) => {
-  const reader = new FileReader();
+const blobToDataURL = (blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
 
-  reader.onloadend = () => {
-    if (reader.error) {
-      reject(reader.error);
-    } else {
-      resolve(reader.result);
-    }
-  };
-  reader.readAsDataURL(blob);
-});
+    reader.onloadend = () => {
+      if (reader.error) {
+        reject(reader.error);
+      } else {
+        resolve(reader.result);
+      }
+    };
+    reader.readAsDataURL(blob);
+  });
 
 PandaBridge.resolveTypes = async function resolveTypes(value) {
   if (isArray(value)) {
@@ -424,7 +428,9 @@ PandaBridge.resolveTypes = async function resolveTypes(value) {
       return value;
     }
     return fromPairs(
-      await Promise.all(map(value, async (v, k) => [k, await this.resolveTypes(v)])),
+      await Promise.all(
+        map(value, async (v, k) => [k, await this.resolveTypes(v)]),
+      ),
     );
   }
   return value;
