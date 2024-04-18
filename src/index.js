@@ -103,8 +103,8 @@ function connectWebViewJavascriptBridge(callback) {
       'message',
       (event) => {
         if (event.data === 'PandaJavascriptBridgeReady') {
-          PandaBridge.listen(PandaBridge.STUDIO, () => {
-            PandaBridge.isStudio = true;
+          PandaBridge.listen(PandaBridge.STUDIO, (args) => {
+            PandaBridge.isStudio = args || true;
           });
           PandaBridge.listen(PandaBridge.LANGUAGE, (args) => {
             PandaBridge.currentLanguage = args && args.language;
