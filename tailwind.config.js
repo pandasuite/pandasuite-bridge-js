@@ -1,10 +1,9 @@
 module.exports = {
-  purge: [
+  content: [
     './src/**/*.{js,jsx,ts,tsx}',
     './public/index.html',
     './node_modules/pandasuite-bridge/tailwind*.{js,jsx,ts,tsx}',
   ],
-  darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {},
     fontSize: {
