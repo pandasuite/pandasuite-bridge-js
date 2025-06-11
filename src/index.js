@@ -1,10 +1,10 @@
 /* eslint-disable no-param-reassign */
 
-import isArray from 'lodash/isArray';
-import isObject from 'lodash/isObject';
-import map from 'lodash/map';
-import fromPairs from 'lodash/fromPairs';
-import startsWith from 'lodash/startsWith';
+import isArray from 'lodash-es/isArray';
+import isObject from 'lodash-es/isObject';
+import map from 'lodash-es/map';
+import fromPairs from 'lodash-es/fromPairs';
+import startsWith from 'lodash-es/startsWith';
 
 const PandaBridge = function PandaBridge() {};
 
@@ -32,6 +32,8 @@ PandaBridge.SYNCHRONIZE = 'synchronize';
 PandaBridge.TRIGGER_MARKER = 'triggerMarker';
 PandaBridge.INITIALIZED = '__ps_initialized';
 PandaBridge.UPDATED = '__ps_updated';
+PandaBridge.RESOLVE_SHORT_TAGS = 'resolveShortTags';
+PandaBridge.RESOLVE_DEEP_SHORT_TAGS = 'resolveDeepShortTags';
 
 PandaBridge.STUDIO = '__ps_studio';
 PandaBridge.LANGUAGE = '__ps_language';
@@ -436,41 +438,58 @@ PandaBridge.resolveTypes = async function resolveTypes(value) {
   return value;
 };
 
+/* Generic async bridge method creator */
+const createAsyncBridgeMethod = (eventName) => {
+  return (...args) => {
+    return new Promise((resolve) => {
+      // Create a unique response event name
+      const responseEvent = `${eventName}_response_${Date.now()}_${Math.random()}`;
+
+      // Listen for the response
+      const responseHandler = (responseArgs) => {
+        // Clean up the listener
+        PandaBridge.unlisten(responseEvent, responseHandler);
+        // Resolve with the result
+        resolve(responseArgs);
+      };
+
+      PandaBridge.listen(responseEvent, responseHandler);
+
+      // Send the request with the response event name
+      PandaBridge.send(eventName, [...args, responseEvent]);
+    });
+  };
+};
+
+/* Binder class */
+const Binder = {};
+
+Binder.resolveShortTags = createAsyncBridgeMethod(
+  PandaBridge.RESOLVE_SHORT_TAGS,
+);
+
+Binder.resolveDeepShortTags = createAsyncBridgeMethod(
+  PandaBridge.RESOLVE_DEEP_SHORT_TAGS,
+);
+
+// Export both PandaBridge and Binder
+export { Binder };
 export default PandaBridge;
 
-if (!Array.prototype.find) {
-  // eslint-disable-next-line no-extend-native
-  Object.defineProperty(Array.prototype, 'find', {
-    value(predicate) {
-      if (this == null) {
-        throw TypeError('"this" is null or not defined');
-      }
+// UMD compatibility: expose PandaBridge directly on window
+if (
+  typeof window !== 'undefined' &&
+  typeof window.PandaBridge === 'object' &&
+  window.PandaBridge.default
+) {
+  // If loaded via UMD and PandaBridge is an object with default export
+  // Replace it with the actual PandaBridge function
+  const actualPandaBridge = window.PandaBridge.default;
+  const actualBinder = window.PandaBridge.Binder;
 
-      const o = Object(this);
+  // Replace window.PandaBridge with the actual function
+  window.PandaBridge = actualPandaBridge;
 
-      // eslint-disable-next-line no-bitwise
-      const len = o.length >>> 0;
-
-      if (typeof predicate !== 'function') {
-        throw TypeError('predicate must be a function');
-      }
-
-      // eslint-disable-next-line prefer-rest-params
-      const thisArg = arguments[1];
-
-      let k = 0;
-
-      while (k < len) {
-        const kValue = o[k];
-        if (predicate.call(thisArg, kValue, k, o)) {
-          return kValue;
-        }
-        // eslint-disable-next-line no-plusplus
-        k++;
-      }
-      return undefined;
-    },
-    configurable: true,
-    writable: true,
-  });
+  // Also expose Binder on window if needed
+  window.PandaBridge.Binder = actualBinder;
 }

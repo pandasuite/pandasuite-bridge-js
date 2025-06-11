@@ -42,6 +42,8 @@ declare module 'pandasuite-bridge' {
     TRIGGER_MARKER: string;
     INITIALIZED: string;
     UPDATED: string;
+    RESOLVE_SHORT_TAGS: string;
+    RESOLVE_DEEP_SHORT_TAGS: string;
     STUDIO: string;
     LANGUAGE: string;
     UNIQUE_ID: string;
@@ -82,6 +84,20 @@ declare module 'pandasuite-bridge' {
     resolveTypes(value: any): Promise<any>;
   }
 
+  export interface BinderType {
+    resolveShortTags(
+      expression: any,
+      strictMode: boolean,
+      context: any,
+    ): Promise<any>;
+    resolveDeepShortTags(
+      value: any,
+      strictMode: boolean,
+      context: any,
+    ): Promise<any>;
+  }
+
   const PandaBridge: PandaBridgeType;
+  export const Binder: BinderType;
   export default PandaBridge;
 }
