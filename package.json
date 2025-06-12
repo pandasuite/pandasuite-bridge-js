@@ -7,7 +7,9 @@
   "types": "pandasuite-bridge.d.ts",
   "scripts": {
     "build": "npm run build:lib && npm run build:min",
-    "build:lib": "BABEL_ENV=modern vite build",
+    "build:lib": "npm run build:umd && npm run build:es",
+    "build:umd": "BUILD_TYPE=umd BABEL_ENV=modern vite build",
+    "build:es": "BUILD_TYPE=es BABEL_ENV=modern vite build",
     "build:min": "BUILD_MINIFIED=true vite build",
     "dev": "vite build --watch",
     "release": "npm run build && release-it"

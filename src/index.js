@@ -472,24 +472,9 @@ Binder.resolveDeepShortTags = createAsyncBridgeMethod(
   PandaBridge.RESOLVE_DEEP_SHORT_TAGS,
 );
 
-// Export both PandaBridge and Binder
+// Attach Binder to PandaBridge for easy access
+PandaBridge.Binder = Binder;
+
+// Export both PandaBridge as default and Binder as named export (for ES modules)
 export { Binder };
 export default PandaBridge;
-
-// UMD compatibility: expose PandaBridge directly on window
-if (
-  typeof window !== 'undefined' &&
-  typeof window.PandaBridge === 'object' &&
-  window.PandaBridge.default
-) {
-  // If loaded via UMD and PandaBridge is an object with default export
-  // Replace it with the actual PandaBridge function
-  const actualPandaBridge = window.PandaBridge.default;
-  const actualBinder = window.PandaBridge.Binder;
-
-  // Replace window.PandaBridge with the actual function
-  window.PandaBridge = actualPandaBridge;
-
-  // Also expose Binder on window if needed
-  window.PandaBridge.Binder = actualBinder;
-}
