@@ -399,9 +399,53 @@ const blobToDataURL = (blob) =>
     reader.readAsDataURL(blob);
   });
 
+// Convert a URL (local path or blob URL) to a data URL
+const urlToDataURL = async (url) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return null;
+    }
+    const blob = await response.blob();
+    return blobToDataURL(blob);
+  } catch (e) {
+    return null;
+  }
+};
+
+// Replace all blob: URLs found inside a string with data URLs
+const replaceBlobUrlsInStringWithDataUrls = async (input) => {
+  if (!input.includes('blob:')) {
+    return input;
+  }
+  const blobUrlRegex = /blob:[^\s"'\)]+/g;
+  const matches = input.match(blobUrlRegex);
+  if (!matches) {
+    return input;
+  }
+  const uniqueBlobUrls = Array.from(new Set(matches));
+
+  const urlToReplacementPairs = await Promise.all(
+    uniqueBlobUrls.map(async (blobUrl) => {
+      const dataUrl = await urlToDataURL(blobUrl);
+      return [blobUrl, dataUrl || blobUrl];
+    }),
+  );
+
+  const replacements = {};
+  urlToReplacementPairs.forEach(([k, v]) => {
+    replacements[k] = v;
+  });
+
+  return input.replace(blobUrlRegex, (m) => replacements[m] || m);
+};
+
 PandaBridge.resolveTypes = async function resolveTypes(value) {
   if (isArray(value)) {
     return Promise.all(map(value, (v) => this.resolveTypes(v)));
+  }
+  if (typeof value === 'string') {
+    return replaceBlobUrlsInStringWithDataUrls(value);
   }
   if (isObject(value)) {
     const { type, value: resourceValue } = value;
@@ -409,23 +453,11 @@ PandaBridge.resolveTypes = async function resolveTypes(value) {
     if (type === 'Image' || type === 'Audio' || type === 'Video') {
       // convert local resources to data urls
       if (!startsWith(resourceValue, 'http')) {
-        try {
-          const blob = await fetch(resourceValue).then((r) => {
-            if (r.ok) {
-              return r.blob();
-            }
-            throw new Error();
-          });
-          return {
-            type,
-            value: await blobToDataURL(blob),
-          };
-        } catch (e) {
-          return {
-            type,
-            value: null,
-          };
-        }
+        const dataUrl = await urlToDataURL(resourceValue);
+        return {
+          type,
+          value: dataUrl,
+        };
       }
       return value;
     }
