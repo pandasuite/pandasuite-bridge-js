@@ -413,22 +413,27 @@ const urlToDataURL = async (url) => {
   }
 };
 
-// Replace all blob: URLs found inside a string with data URLs
-const replaceBlobUrlsInStringWithDataUrls = async (input) => {
-  if (!input.includes('blob:')) {
+// Replace all blob: URLs and localhost URLs found inside a string with data URLs
+const replaceUrlsInStringWithDataUrls = async (input) => {
+  const hasBlobUrls = input.includes('blob:');
+  const hasLocalhostUrls = input.includes('localhost');
+  
+  if (!hasBlobUrls && !hasLocalhostUrls) {
     return input;
   }
-  const blobUrlRegex = /blob:[^\s"'\)]+/g;
-  const matches = input.match(blobUrlRegex);
+  
+  // Match both blob: URLs and localhost URLs
+  const urlRegex = /(blob:[^\s"'\)]+|http:\/\/localhost:\d+[^\s"'\)]*)/g;
+  const matches = input.match(urlRegex);
   if (!matches) {
     return input;
   }
-  const uniqueBlobUrls = Array.from(new Set(matches));
+  const uniqueUrls = Array.from(new Set(matches));
 
   const urlToReplacementPairs = await Promise.all(
-    uniqueBlobUrls.map(async (blobUrl) => {
-      const dataUrl = await urlToDataURL(blobUrl);
-      return [blobUrl, dataUrl || blobUrl];
+    uniqueUrls.map(async (url) => {
+      const dataUrl = await urlToDataURL(url);
+      return [url, dataUrl || url];
     }),
   );
 
@@ -437,7 +442,7 @@ const replaceBlobUrlsInStringWithDataUrls = async (input) => {
     replacements[k] = v;
   });
 
-  return input.replace(blobUrlRegex, (m) => replacements[m] || m);
+  return input.replace(urlRegex, (m) => replacements[m] || m);
 };
 
 PandaBridge.resolveTypes = async function resolveTypes(value) {
@@ -445,7 +450,7 @@ PandaBridge.resolveTypes = async function resolveTypes(value) {
     return Promise.all(map(value, (v) => this.resolveTypes(v)));
   }
   if (typeof value === 'string') {
-    return replaceBlobUrlsInStringWithDataUrls(value);
+    return replaceUrlsInStringWithDataUrls(value);
   }
   if (isObject(value)) {
     const { type, value: resourceValue } = value;
