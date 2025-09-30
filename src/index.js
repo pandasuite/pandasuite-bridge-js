@@ -40,6 +40,7 @@ PandaBridge.LANGUAGE = '__ps_language';
 PandaBridge.UNIQUE_ID = '__ps_id';
 PandaBridge.BINDABLE = '__ps_bindable';
 PandaBridge.SCREENS = '__ps_screens';
+PandaBridge.APP_STATE = '__ps_appState';
 
 PandaBridge.GET_SNAPSHOT_DATA = '__ps_getSnapshotData';
 PandaBridge.SET_SNAPSHOT_DATA = '__ps_setSnapshotData';
@@ -417,11 +418,11 @@ const urlToDataURL = async (url) => {
 const replaceUrlsInStringWithDataUrls = async (input) => {
   const hasBlobUrls = input.includes('blob:');
   const hasLocalhostUrls = input.includes('localhost');
-  
+
   if (!hasBlobUrls && !hasLocalhostUrls) {
     return input;
   }
-  
+
   // Match both blob: URLs and localhost URLs
   const urlRegex = /(blob:[^\s"'\)]+|http:\/\/localhost:\d+[^\s"'\)]*)/g;
   const matches = input.match(urlRegex);

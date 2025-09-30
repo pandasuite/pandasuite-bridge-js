@@ -57,6 +57,7 @@ declare module 'pandasuite-bridge' {
     SCREENSHOT_RESULT: string;
     PANDASUITE_HOST_WITH_SCHEME: string;
     PANDASUITE_DATA_HOST_WITH_SCHEME: string;
+    APP_STATE: string;
 
     // Methods
     init(callBack: () => void): void;
