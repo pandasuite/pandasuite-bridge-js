@@ -1,6 +1,6 @@
 {
   "name": "pandasuite-bridge",
-  "version": "5.0.4",
+  "version": "5.0.5",
   "description": "",
   "main": "lib/pandasuite-bridge.js",
   "module": "lib/pandasuite-bridge.es.js",
