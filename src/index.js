@@ -184,8 +184,9 @@ connectWebViewJavascriptBridge((bridge) => {
     try {
       const parsed = JSON.parse(message);
       executeHook(parsed.event, parsed.args);
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
+    } catch (e) {
+      console.error('PandaBridge: unable to handle bridge message', e);
+    }
   });
 
   PandaBridge.waitingSend.forEach((stringify) => {
@@ -209,8 +210,9 @@ PandaBridge.send = function send(event, args) {
     } else {
       PandaBridge.waitingSend.push(stringify);
     }
-    // eslint-disable-next-line no-empty
-  } catch (e) {}
+  } catch (e) {
+    console.error('PandaBridge: unable to send event', event, e);
+  }
 };
 
 /* General events handling */
