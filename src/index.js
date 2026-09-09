@@ -2,6 +2,7 @@
 
 import isArray from 'lodash-es/isArray';
 import isObject from 'lodash-es/isObject';
+import isString from 'lodash-es/isString';
 import map from 'lodash-es/map';
 import fromPairs from 'lodash-es/fromPairs';
 import startsWith from 'lodash-es/startsWith';
@@ -53,6 +54,61 @@ PandaBridge.SCREENSHOT_RESULT = '__ps_screenshotResult';
 PandaBridge.PANDASUITE_HOST_WITH_SCHEME = '__ps_pandasuiteHostWithScheme';
 PandaBridge.PANDASUITE_DATA_HOST_WITH_SCHEME =
   '__ps_pandasuiteDataHostWithScheme';
+
+/* Correlated responses: a minted event name, passed as the last argument of a
+ * message, under which the answer comes back. */
+PandaBridge.RESPONSE_EVENT_PREFIX = '__ps_response_';
+
+/* Keys awaiting an answer. Not `eventReceive`, which `unlisten()` clears; and
+ * null-prototype, since incoming event names are looked up here. */
+const pendingResponses = Object.create(null);
+
+let responseCounter = 0;
+
+function responseKey() {
+  const { crypto } = window;
+
+  /* `randomUUID` needs a secure context, which an iframe is not always */
+  const unique =
+    crypto && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${(responseCounter += 1)}`;
+
+  return PandaBridge.RESPONSE_EVENT_PREFIX + unique;
+}
+
+/* The last argument, when it is a string under the reserved prefix */
+function responseKeyOf(args) {
+  const last = isArray(args) ? args[args.length - 1] : undefined;
+
+  return isString(last) && startsWith(last, PandaBridge.RESPONSE_EVENT_PREFIX)
+    ? last
+    : undefined;
+}
+
+/* Total: a failure reaches `failed` whatever it carries */
+function errorMessage(error) {
+  try {
+    if (error && typeof error.message === 'string') {
+      return error.message;
+    }
+    return String(error);
+  } catch (conversionError) {
+    return 'failed';
+  }
+}
+
+function isThenable(value) {
+  return value != null && typeof value.then === 'function';
+}
+
+function okOutcome(value) {
+  return value === undefined ? { status: 'ok' } : { status: 'ok', value };
+}
+
+function failedOutcome(error) {
+  return { status: 'failed', error: errorMessage(error) };
+}
 
 function isIOS() {
   return (
@@ -140,15 +196,95 @@ function connectWebViewJavascriptBridge(callback) {
 }
 
 function executeHook(event, args) {
+  const caller = pendingResponses[event];
+
+  /* A settlement is protocol traffic, not a component event; a key nobody waits
+   * for falls through, so no event name is reserved. */
+  if (caller) {
+    delete pendingResponses[event];
+    caller(isArray(args) ? args[0] : args);
+    return;
+  }
+
+  const key = responseKeyOf(args);
+  /* The key is transport, never an author's parameter */
+  const visible = (key ? args.slice(0, -1) : args) || [];
+
   PandaBridge.globalReceive.forEach((callback) => {
-    callback(event, args || []);
+    callback(event, visible);
   });
 
-  if (PandaBridge.eventReceive[event]) {
-    PandaBridge.eventReceive[event].forEach((callback) => {
-      callback(args || []);
-    });
+  const listeners = PandaBridge.eventReceive[event];
+
+  if (!key) {
+    if (listeners) {
+      listeners.forEach((callback) => {
+        callback(visible);
+      });
+    }
+    return;
   }
+
+  /* One responder, the first listener of the event; the others and the globals
+   * observe. No listener answers absent rather than leaving the caller waiting. */
+  if (!listeners || listeners.length === 0) {
+    respond(key, okOutcome());
+    return;
+  }
+  listeners.forEach((callback, index) => {
+    if (index === 0) {
+      settleFrom(key, callback, visible);
+    } else {
+      callback(visible);
+    }
+  });
+}
+
+function sendOutcome(key, outcome) {
+  try {
+    dispatch(stringifyMessage(key, [outcome]));
+    return null;
+  } catch (e) {
+    console.error('PandaBridge: unable to send response', key, e);
+    return e;
+  }
+}
+
+/* One outcome per key: a value the wire cannot carry becomes a failure rather
+ * than a message that never leaves. */
+function respond(key, outcome) {
+  const error = sendOutcome(key, outcome);
+
+  if (error) {
+    sendOutcome(key, failedOutcome(error));
+  }
+}
+
+/* The listener's return value settles the answer. Adopted through
+ * `Promise.resolve`, never by calling `then` directly: that is what settles it
+ * once, keeps a throwing `then` from escaping, and resolves a nested thenable. */
+function settleFrom(key, listener, args) {
+  let returned;
+
+  try {
+    returned = listener(args);
+
+    if (returned === undefined) {
+      respond(key, okOutcome());
+      return;
+    }
+    if (!isThenable(returned)) {
+      respond(key, okOutcome(returned));
+      return;
+    }
+  } catch (e) {
+    respond(key, failedOutcome(e));
+    return;
+  }
+  Promise.resolve(returned).then(
+    (value) => respond(key, okOutcome(value)),
+    (error) => respond(key, failedOutcome(error)),
+  );
 }
 
 connectWebViewJavascriptBridge((bridge) => {
@@ -202,16 +338,63 @@ PandaBridge.init = function init(callBack) {
   }
 };
 
-PandaBridge.send = function send(event, args) {
-  try {
-    const stringify = JSON.stringify({ event, args });
-    if (PandaBridge.bridge) {
-      PandaBridge.bridge.send.call(PandaBridge.bridge, stringify);
-    } else {
-      PandaBridge.waitingSend.push(stringify);
+function stringifyMessage(event, args) {
+  return JSON.stringify({ event, args });
+}
+
+function dispatch(stringified) {
+  if (PandaBridge.bridge) {
+    PandaBridge.bridge.send.call(PandaBridge.bridge, stringified);
+  } else {
+    PandaBridge.waitingSend.push(stringified);
+  }
+}
+
+/* The key goes last, and alone when there is no payload, so it never becomes
+ * one; a payload that is not an array stays at `args[0]`. */
+function withResponseKey(args, key) {
+  if (isArray(args)) {
+    return args.length > 0 ? [...args, key] : [key];
+  }
+  return args == null ? [key] : [args, key];
+}
+
+/* With a callback, the message carries a response key and the callback receives
+ * the outcome answered under it; without one, nothing changes. `event` is a
+ * project event, not one of this library's own, whose receivers read their
+ * arguments by position. There is no timeout: see the type declarations. */
+PandaBridge.send = function send(event, args, callback) {
+  /* `send(event, callback)` is the same call without a payload; unnormalized it
+   * would serialize the callback away and send an unanswerable message. */
+  let payload = args;
+  let answer = callback;
+
+  if (typeof payload === 'function' && answer === undefined) {
+    answer = payload;
+    payload = undefined;
+  }
+
+  if (typeof answer !== 'function') {
+    try {
+      dispatch(stringifyMessage(event, payload));
+    } catch (e) {
+      console.error('PandaBridge: unable to send event', event, e);
     }
+    return;
+  }
+
+  const key = responseKey();
+
+  try {
+    const stringified = stringifyMessage(event, withResponseKey(payload, key));
+
+    pendingResponses[key] = answer;
+    dispatch(stringified);
   } catch (e) {
     console.error('PandaBridge: unable to send event', event, e);
+    /* No key left waiting: a callback never waits for a message that never left */
+    delete pendingResponses[key];
+    Promise.resolve().then(() => answer(failedOutcome(e)));
   }
 };
 

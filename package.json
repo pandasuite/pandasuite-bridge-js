@@ -12,7 +12,8 @@
     "build:es": "BUILD_TYPE=es BABEL_ENV=modern vite build",
     "build:min": "BUILD_MINIFIED=true vite build",
     "dev": "vite build --watch",
-    "release": "npm run build && release-it"
+    "release": "npm run build && release-it",
+    "test": "node --import ./tests/register.mjs --test 'tests/*.test.mjs'"
   },
   "repository": {
     "type": "git",
