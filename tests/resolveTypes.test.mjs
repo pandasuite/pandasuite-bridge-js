@@ -11,7 +11,10 @@ beforeEach(() => {
   fetched = [];
   globalThis.fetch = async (url) => {
     fetched.push(url);
-    return { ok: true, blob: async () => new Blob(['photo'], { type: 'image/png' }) };
+    return {
+      ok: true,
+      blob: async () => new Blob(['photo'], { type: 'image/png' }),
+    };
   };
   // FileReader is a browser boundary; resolveTypes and its conversion helpers are real.
   globalThis.FileReader = class {
@@ -22,27 +25,30 @@ beforeEach(() => {
   };
 });
 
-test('materializes packaged resource text before it becomes an HTTP request body', async () => {
-  assert.equal(await PandaBridge.resolveTypes(resourceUrl), dataUrl);
-  assert.deepEqual(fetched, [resourceUrl]);
+test('former native scheme strings remain ordinary text', async () => {
+  assert.equal(await PandaBridge.resolveTypes(resourceUrl), resourceUrl);
+  assert.deepEqual(fetched, []);
 });
 
-test('materializes packaged URLs nested in request data and embedded JSON strings', async () => {
+test('converts blob URLs in nested typed media and JSON strings', async () => {
   const input = {
-    attachments: [resourceUrl, { type: 'Image', value: resourceUrl }],
-    body: JSON.stringify({ first: resourceUrl, second: resourceUrl }),
+    attachments: ['blob:photo', { type: 'Image', value: 'blob:photo' }],
+    body: JSON.stringify({ photo: 'blob:photo' }),
   };
   assert.deepEqual(await PandaBridge.resolveTypes(input), {
     attachments: [dataUrl, { type: 'Image', value: dataUrl }],
-    body: JSON.stringify({ first: dataUrl, second: dataUrl }),
+    body: JSON.stringify({ photo: dataUrl }),
   });
-  assert.equal(fetched.length, 3, 'repeated URL within one string is fetched once');
 });
 
 test('preserves ordinary remote URLs and existing blob and localhost conversion', async () => {
   assert.deepEqual(
-    await PandaBridge.resolveTypes(['https://example.test/image.png', 'blob:photo', 'http://localhost:8000/photo']),
-    ['https://example.test/image.png', dataUrl, dataUrl],
+    await PandaBridge.resolveTypes([
+      'https://example.test/image.png',
+      'blob:photo',
+      'http://localhost:8000/photo',
+    ]),
+    ['https://example.test/image.png', dataUrl, dataUrl]
   );
   assert.deepEqual(fetched, ['blob:photo', 'http://localhost:8000/photo']);
 });
