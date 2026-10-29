@@ -48,10 +48,28 @@ Object.defineProperty(globalThis, 'navigator', {
   configurable: true,
 });
 
+/* What a theme test reads back from `<html>`: its classes and inline style */
+const rootClasses = new Set();
+
 globalThis.document = {
   addEventListener() {},
   createElement: () => ({ style: {} }),
-  documentElement: { appendChild() {}, removeChild() {} },
+  documentElement: {
+    appendChild() {},
+    removeChild() {},
+    classList: {
+      toggle(name, force) {
+        if (force === undefined ? !rootClasses.has(name) : force) {
+          rootClasses.add(name);
+        } else {
+          rootClasses.delete(name);
+        }
+        return rootClasses.has(name);
+      },
+      contains: (name) => rootClasses.has(name),
+    },
+    style: { colorScheme: '' },
+  },
 };
 
 const post = (data) => {
@@ -92,6 +110,11 @@ export const reset = () => {
   refused.length = 0;
   refuseToSend = null;
   window.crypto = globalThis.crypto;
+  PandaBridge.theme = undefined;
+  PandaBridge.themeReceive = [];
+  PandaBridge.isFollowingStudioTheme = false;
+  rootClasses.clear();
+  document.documentElement.style.colorScheme = '';
 };
 
 /* The outcome of the last message sent */

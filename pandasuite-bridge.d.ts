@@ -26,6 +26,9 @@ declare module 'pandasuite-bridge' {
   export type ActionOutcome =
     { status: 'ok'; value?: any } | { status: 'failed'; error: string };
 
+  /** The Studio's colour theme. */
+  export type StudioTheme = 'light' | 'dark';
+
   export interface PandaBridgeType {
     // Properties
     initCallBack: (() => void) | null;
@@ -41,6 +44,15 @@ declare module 'pandasuite-bridge' {
     markers: any[];
     isCoreInitialized: boolean;
     currentLanguage?: string;
+    /**
+     * The theme of the Studio, sent to the editor of a system component:
+     * `undefined` until the Studio sends one, then `'light'` or `'dark'`. The
+     * Studio sends it when the editor loads and on every change; any other value
+     * is ignored. Nothing is inferred from the OS preference and nothing is
+     * stored. It stays `undefined` outside the Studio, in a published app, and on
+     * the native iOS and Android bridges.
+     */
+    theme?: StudioTheme;
 
     // Constants
     INITIALIZE: string;
@@ -53,6 +65,8 @@ declare module 'pandasuite-bridge' {
     RESOLVE_DEEP_SHORT_TAGS: string;
     STUDIO: string;
     LANGUAGE: string;
+    /** The event the Studio sends its theme with: `{ theme: StudioTheme }`. */
+    THEME: string;
     UNIQUE_ID: string;
     BINDABLE: string;
     SCREENS: string;
@@ -108,6 +122,27 @@ declare module 'pandasuite-bridge' {
     unlisten(event: string, callback: (args: any[]) => void): void;
     onLoad(callback: (data: PandaData) => void): void;
     onUpdate(callback: (data: PandaData) => void): void;
+    /**
+     * Follow the theme of the Studio, for what the document cannot do alone (a
+     * JS widget such as a JSON viewer or a map). `callback` is called at once if
+     * a theme is already known, then each time the value changes, never twice
+     * with the same one. Returns a function that unsubscribes.
+     *
+     * It does not touch the document: see `followStudioTheme()` for that.
+     */
+    onThemeChange(callback: (theme: StudioTheme) => void): () => void;
+    /**
+     * The opt-in of a component whose editor supports dark. From this call on,
+     * each theme of the Studio is applied to `<html>`: the `dark` class is
+     * toggled and `style.colorScheme` is set to the theme. Before any theme, and
+     * outside the Studio, it does nothing; calling it twice is harmless. A
+     * component that never calls it keeps its document untouched.
+     *
+     * An editor following the Studio theme must not call `takeScreenshot()`:
+     * system units have no project rendering, and a themed capture would be saved
+     * as a thumbnail.
+     */
+    followStudioTheme(): void;
     getSnapshotData(callback: (args: any[]) => any): void;
     setSnapshotData(callback: (data: SnapshotData) => void): void;
     getScreenshot(
