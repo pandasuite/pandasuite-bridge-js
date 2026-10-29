@@ -420,7 +420,7 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
       assert.doesNotMatch(themed.css, /:is\(|:where\(/);
     });
 
-    test('fields without a background take the Studio field look in dark', () => {
+    test('fields without a background take the surface in dark and keep their inherited text', () => {
       const look = (markup) => {
         const field = themed.render(markup, { dark: true });
 
@@ -429,7 +429,8 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
           color: field.value('color'),
         };
       };
-      const studioField = { background: rgb('#1f232c'), color: rgb('#eef0f4') };
+      /* The text is the root's, which a dark colour scheme turns white */
+      const studioField = { background: rgb('#1f232c'), color: rgb('#ffffff') };
 
       assert.deepEqual(look('<input type="text">'), studioField);
       assert.deepEqual(look('<select>'), studioField);
