@@ -117,8 +117,10 @@ declare module 'pandasuite-bridge' {
      */
     listen(event: string, callback: (args: any[]) => any): void;
     /**
-     * With no argument, also removes the bridge's own `__ps_studio`,
-     * `__ps_language` and `__ps_theme` listeners.
+     * With no argument, removes every listener, the bridge's own included:
+     * those of `__ps_initialize` and `__ps_update`, which feed `onLoad` and
+     * `onUpdate`, of `__ps_studio`, `__ps_language` and `__ps_theme`, and those
+     * of pending `Binder` calls.
      */
     unlisten(): void;
     unlisten(callback: (event: string, args: any[]) => void): void;
@@ -146,7 +148,12 @@ declare module 'pandasuite-bridge' {
      * plugin, which turns its light markup dark under `html.dark` and leaves
      * light rendering as it was:
      * `plugins: [require('@tailwindcss/forms')({strategy: 'class'}), require('pandasuite-bridge/studio-theme')]`.
-     * Tailwind 2 only for now.
+     * Tailwind 2 only for now. Forms must use `strategy: 'class'`: under its
+     * default `base` strategy a bare `select` loses its caret, in light too.
+     * The light values are Tailwind's default shades, not the config's: a
+     * config that replaces a themed family (gray, red, yellow, green, blue,
+     * indigo, purple) gets Tailwind's defaults in light, and a themed shade it
+     * extends keeps its own value in dark.
      *
      * An editor following the Studio theme must not call `takeScreenshot()`:
      * system units have no project rendering, and a themed capture would be saved

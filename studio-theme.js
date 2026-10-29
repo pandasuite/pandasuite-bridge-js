@@ -12,7 +12,11 @@
  * `.dark` swaps them, as the dashboard does (Bamboo's `tailwind.config.js`):
  * the greys run the other way, the soft tints of the accents become deep ones
  * and their text shades light ones. The light values are the installed
- * Tailwind's own defaults, so an editor renders the same until `.dark` is set.
+ * Tailwind's own defaults, so an editor renders the same until `.dark` is set,
+ * as long as its config keeps Tailwind's colours: one that replaces a themed
+ * family (gray, and the accents below) gets the defaults in light, and a
+ * themed shade it extends keeps its own value in dark. Forms must use the
+ * class strategy: under `base`, a bare `select` loses its caret.
  */
 
 const plugin = require('tailwindcss/plugin');
