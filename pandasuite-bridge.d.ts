@@ -116,6 +116,10 @@ declare module 'pandasuite-bridge' {
      * listeners of the same event, and global listeners, only observe.
      */
     listen(event: string, callback: (args: any[]) => any): void;
+    /**
+     * With no argument, also removes the bridge's own `__ps_studio`,
+     * `__ps_language` and `__ps_theme` listeners.
+     */
     unlisten(): void;
     unlisten(callback: (event: string, args: any[]) => void): void;
     unlisten(event: string): void;
@@ -137,6 +141,12 @@ declare module 'pandasuite-bridge' {
      * toggled and `style.colorScheme` is set to the theme. Before any theme, and
      * outside the Studio, it does nothing; calling it twice is harmless. A
      * component that never calls it keeps its document untouched.
+     *
+     * A Tailwind 2 editor also lists the bridge's theme plugin after the forms
+     * plugin, which turns its light markup dark under `html.dark` and leaves
+     * light rendering as it was:
+     * `plugins: [require('@tailwindcss/forms')({strategy: 'class'}), require('pandasuite-bridge/studio-theme')]`.
+     * Tailwind 2 only for now.
      *
      * An editor following the Studio theme must not call `takeScreenshot()`:
      * system units have no project rendering, and a themed capture would be saved
