@@ -40,6 +40,15 @@ globalThis.window = {
   },
   /* The arm key minting takes in production; a test removes it for the other */
   crypto: globalThis.crypto,
+  /* A dark OS, so a theme read from it instead of the Studio would show */
+  matchMedia: (query) => ({
+    media: query,
+    matches: query === '(prefers-color-scheme: dark)',
+    addListener() {},
+    removeListener() {},
+    addEventListener() {},
+    removeEventListener() {},
+  }),
 };
 
 /* `navigator` is a getter-only global on Node */
@@ -82,6 +91,15 @@ export const PandaBridge = module.default;
 
 /* Connect once: the handshake is what hands the library its bridge */
 post('PandaJavascriptBridgeReady');
+
+/* The theme state once imported and connected, before any reset rewrites it */
+export const themeAtImport = {
+  theme: PandaBridge.theme,
+  subscribers: PandaBridge.themeReceive.length,
+  isFollowingStudioTheme: PandaBridge.isFollowingStudioTheme,
+  rootClasses: [...rootClasses],
+  colorScheme: document.documentElement.style.colorScheme,
+};
 
 /* Deliver an incoming message, the shape `bridge.init` parses */
 export const receive = (event, args) => post(JSON.stringify({ event, args }));

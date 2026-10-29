@@ -3,7 +3,7 @@
 import { beforeEach, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { PandaBridge, receive, reset } from './harness.mjs';
+import { PandaBridge, receive, reset, themeAtImport } from './harness.mjs';
 
 beforeEach(reset);
 
@@ -12,8 +12,14 @@ const root = document.documentElement;
 const send = (theme) => receive('__ps_theme', { theme });
 
 describe('the theme the Studio sends', () => {
-  test('is undefined until the Studio sends one', () => {
-    assert.equal(PandaBridge.theme, undefined);
+  test('is undefined until the Studio sends one, and nothing follows it', () => {
+    assert.deepEqual(themeAtImport, {
+      theme: undefined,
+      subscribers: 0,
+      isFollowingStudioTheme: false,
+      rootClasses: [],
+      colorScheme: '',
+    });
   });
 
   test('is set by a valid __ps_theme', () => {
