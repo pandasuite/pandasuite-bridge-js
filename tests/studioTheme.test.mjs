@@ -39,6 +39,11 @@ const KIT_2 = {
   tabTitle: 'uppercase font-sans text-base pt-2.5 ',
   dropdown:
     'py-1 px-3 bg-no-repeat appearance-none rounded text-sm bg-gray-100 border-none hover:bg-gray-200 focus:ring-0 focus:outline-none ',
+  /* Verbatim, the stray `"` included: the class attribute holds it */
+  checkbox:
+    'form-checkbox rounded bg-gray-100 border-transparent focus:border-transparent focus:ring-0 hover:bg-gray-200 focus:bg-gray-200 checked:bg-gray-100 focus:outline-none" ',
+  checkboxLabel:
+    '<label class="inline-flex items-center"><span class="ml-2 text-sm">',
   /* The inline style React writes for the Dropdown's caret */
   dropdownStyle:
     "background-image: url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'><path fill='currentColor' d='M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z'></path></svg>\"); background-position: right center; background-size: 9px; padding-right: calc(1.5em + 9px);",
@@ -59,7 +64,18 @@ const KIT_3 = {
   tabTitle: 'pt-2.5 font-sans text-base uppercase',
   loaderLabel: 'font-medium text-purple-600 text-sm',
   loaderDescription: 'text-gray-500 text-xs',
+  dropdown:
+    'appearance-none rounded bg-gray-100 px-3 py-1 text-sm transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400',
+  checkboxLabel:
+    '<label class="inline-flex items-center gap-2"><span class="text-sm">',
 };
+
+/* Search's own fields, which set no background: its `SearchInput` and the
+ * weight of a key (`Keys.js`) */
+const SEARCH_INPUT =
+  '<div class="px-2 pb-2.5"><input type="text" class="my-4 text-gray-500 border rounded focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent">';
+const WEIGHT_INPUT =
+  '<td class="px-6 py-4 whitespace-nowrap"><div class="w-0 flex-1 flex items-center"><input type="number" class="w-10 ml-2 flex-1 border text-right rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent">';
 
 /* HTTP's `Configuration.js` and `Persistence.js`, Search's `Keys.js` and
  * `Configuration.js`: a key's path segments and its Delete button */
@@ -175,6 +191,28 @@ const PAIRS = [
     'Search results count',
     '<div class="px-2 pb-2.5"><div><p class="text-sm text-gray-700">',
   ],
+  /* Text the browser colours: inherited down from the root */
+  ['kit 2.x Input, typed text', `<input class="${KIT_2.input}">`],
+  [
+    'kit 2.x Input, typed text, hovered',
+    `<input class="${KIT_2.input}">`,
+    ['hover'],
+  ],
+  [
+    'kit 2.x Input, typed text, focused',
+    `<input class="${KIT_2.input}">`,
+    ['focus'],
+  ],
+  ['kit 2.x Dropdown', `<select class="${KIT_2.dropdown}">`],
+  ['kit 3.x Dropdown', `<select class="${KIT_3.dropdown}">`],
+  [
+    'kit 2.x Checkbox label (HTTP key type)',
+    `${TABLE_ROW}<td class="px-6 py-4 whitespace-nowrap"><div class="w-full flex items-center space-x-3">${KIT_2.checkboxLabel}`,
+  ],
+  ['kit 3.x Checkbox label', KIT_3.checkboxLabel],
+  ['Search input', SEARCH_INPUT],
+  ['Search input, focused', SEARCH_INPUT, ['focus']],
+  ['Search key weight', `${TABLE_ROW}${WEIGHT_INPUT}`],
 ];
 
 /* Placeholders: the text is the input's `::placeholder`, on the input */
@@ -201,6 +239,7 @@ const PLACEHOLDERS = [
     `<input class="${KIT_3.input}">`,
     ['focus'],
   ],
+  ['Search input placeholder', SEARCH_INPUT],
 ];
 
 const VERSIONS = {
@@ -381,7 +420,38 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
       assert.doesNotMatch(themed.css, /:is\(|:where\(/);
     });
 
+    test('fields without a background take the Studio field look in dark', () => {
+      const look = (markup) => {
+        const field = themed.render(markup, { dark: true });
+
+        return {
+          background: field.value('background-color'),
+          color: field.value('color'),
+        };
+      };
+      const studioField = { background: rgb('#1f232c'), color: rgb('#eef0f4') };
+
+      assert.deepEqual(look('<input type="text">'), studioField);
+      assert.deepEqual(look('<select>'), studioField);
+      assert.deepEqual(look('<textarea>'), studioField);
+    });
+
     if (version === '2.1') {
+      test('the focused kit 2.x Checkbox has no white halo in dark', () => {
+        const offset = (isDark) =>
+          themed
+            .render(
+              `<label class="inline-flex items-center"><input type="checkbox" class='${KIT_2.checkbox}'>`,
+              { dark: isDark, states: ['focus'] },
+            )
+            .value('--tw-ring-offset-color');
+
+        assert.deepEqual(
+          { light: offset(false), dark: offset(true) },
+          { light: rgb('#ffffff'), dark: rgb('#1f232c') },
+        );
+      });
+
       test('winning images hold no variable', () => {
         const formSelect = (sheet, isDark) =>
           sheet

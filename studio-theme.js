@@ -134,6 +134,17 @@ module.exports = plugin(
           backgroundColor: withOpacity(colors.green[700], '--tw-bg-opacity'),
         },
         ...darkText,
+        /* Fields with no background of their own keep the browser's white,
+         * which Chromium 87 does not darken: they take the surface and the
+         * text role, as a white field on a white page. A field with any `bg-`
+         * utility is left to it (the kit's grey wells). */
+        '.dark input:not([class*="bg-"]), .dark select:not([class*="bg-"]), .dark textarea:not([class*="bg-"])':
+          { backgroundColor: SURFACE, color: DARK_GRAY[900] },
+        /* Forms 0.3.2 puts a 2px white ring offset around a focused checkbox
+         * or radio, which the kit Checkbox's `focus:ring-0` keeps */
+        '.dark .form-checkbox:focus, .dark .form-radio:focus': {
+          '--tw-ring-offset-color': SURFACE,
+        },
         /* An image cannot read a variable: forms' caret keeps its light grey,
          * and the kit Dropdown's black one turns light in dark (over its
          * inline style) */

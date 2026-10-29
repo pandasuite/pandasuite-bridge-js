@@ -28,6 +28,7 @@ const STATES = [
 const STRUCTURAL = ['root', 'not'];
 
 const INHERITED = ['color'];
+const FIELDS = ['input', 'select', 'textarea'];
 
 export async function compile(tailwind, config) {
   const { css } = await postcss([tailwind(config)]).process(
@@ -417,12 +418,13 @@ const inlineDeclarations = (style) =>
     : [];
 
 /* `<div class="bg-white"><span class="text-gray-400">`: the chain down to the
- * innermost element, under `<html>` and `<body>` */
+ * innermost element, under `<html>` and `<body>`. In dark, <html> carries
+ * what `followStudioTheme()` sets: the `dark` class and its colour scheme. */
 const parseMarkup = (markup, { dark, states, style }) => {
   const html = {
     tag: 'html',
     classes: dark ? ['dark'] : [],
-    attributes: {},
+    attributes: dark ? { style: 'color-scheme: dark' } : {},
     states: [],
     parent: null,
   };
@@ -437,10 +439,9 @@ const parseMarkup = (markup, { dark, states, style }) => {
 
   tags.forEach(([, tag, source], index) => {
     const attributes = Object.fromEntries(
-      [...source.matchAll(/([-\w]+)="([^"]*)"/g)].map(([, name, value]) => [
-        name,
-        value,
-      ]),
+      [...source.matchAll(/([-\w]+)=(?:"([^"]*)"|'([^']*)')/g)].map(
+        ([, name, double, single]) => [name, double ?? single],
+      ),
     );
     const innermost = index === tags.length - 1;
 
@@ -574,18 +575,38 @@ export class Stylesheet {
     return parent ? this.variable(parent, name) : undefined;
   }
 
+  /* What Chromium 87 paints where no rule says: the root's text by its
+   * colour scheme, and a white field, which it does not darken */
+  userAgent(element, property, pseudoElement) {
+    if (property === 'color' && element.tag === 'html') {
+      return this.declared(element, 'color-scheme') === 'dark'
+        ? '#ffffff'
+        : '#000000';
+    }
+    if (
+      property === 'background-color' &&
+      pseudoElement === null &&
+      FIELDS.includes(element.tag)
+    ) {
+      return '#ffffff';
+    }
+    return undefined;
+  }
+
   value(element, property, pseudoElement = null) {
     const value = this.declared(element, property, pseudoElement);
     const parent = pseudoElement ? element : element.parent;
-
-    if (
+    const inherits =
       (value === undefined && INHERITED.includes(property)) ||
-      value === 'inherit'
-    ) {
-      return parent ? this.value(parent, property) : undefined;
+      value === 'inherit';
+
+    if (inherits && parent) {
+      return this.value(parent, property);
     }
-    if (value === undefined) {
-      return undefined;
+    if (value === undefined || value === 'inherit') {
+      const fallback = this.userAgent(element, property, pseudoElement);
+
+      return fallback && normalizeColors(fallback);
     }
     return normalizeColors(
       substituteVariables(value, (name) =>
