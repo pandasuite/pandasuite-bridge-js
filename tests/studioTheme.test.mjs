@@ -319,13 +319,16 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
           .filter(({ type }) => type === 'rule')
           .flatMap(({ selectors }) => selectors)
           .filter(
-            (selector) => selector !== '.dark' && !selector.startsWith('.dark '),
+            (selector) =>
+              selector !== '.dark' && !selector.startsWith('.dark '),
           ),
         [':root', '.form-select'],
       );
       assert.deepEqual(
         root.nodes
-          .filter(({ type, prop }) => type === 'decl' && !prop.startsWith('--c-'))
+          .filter(
+            ({ type, prop }) => type === 'decl' && !prop.startsWith('--c-'),
+          )
           .map(({ prop, value }) => `${prop}: ${value}`),
         ['color-scheme: light'],
       );
@@ -369,7 +372,8 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
         ),
         [rgb('#c4b5fd'), rgb('#a5b4fc'), rgb('#93c5fd'), rgb('#fca5a5')],
       );
-      /* HTTP and Search's Delete: `hover:text-indigo-900`, whose dark is the 100 */
+      /* HTTP and Search's Delete: `hover:text-indigo-900`, whose dark is
+       * the 100 */
       assert.equal(
         dark(`${TABLE_ROW}${DELETE}`, 'color', { states: ['hover'] }),
         rgb('#e0e7ff'),

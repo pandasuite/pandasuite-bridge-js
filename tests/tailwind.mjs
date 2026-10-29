@@ -1,8 +1,8 @@
 /* Test runner only. Compiles a Tailwind 2 stylesheet and answers what Chromium
  * would paint for one element of it: the winning declaration of a property for a
  * class list (selectors, `:hover`/`:focus`, a `.dark` <html>, an inline style),
- * its `var()` and `currentColor` resolved, its colours written `rgb()`. Enough of CSS for the
- * stylesheets Tailwind 2 writes, not a browser. */
+ * its `var()` and `currentColor` resolved, its colours written `rgb()`. Enough
+ * of CSS for the stylesheets Tailwind 2 writes, not a browser. */
 
 import { createRequire } from 'node:module';
 
