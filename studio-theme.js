@@ -138,8 +138,9 @@ module.exports = plugin(
          * which Chromium 87 does not darken: they take the surface, as a white
          * field on a white page. Their text stays theirs (their own class, or
          * the root's, which preflight's `color: inherit` hands down). A field
-         * with any `bg-` utility is left to it (the kit's grey wells). */
-        '.dark input:not([class*="bg-"]), .dark select:not([class*="bg-"]), .dark textarea:not([class*="bg-"])':
+         * with any `bg-` utility is left to it (the kit's grey wells), and so
+         * are checkboxes and radios, whose checked fill forms paints. */
+        '.dark input:not([class*="bg-"]):not([type="checkbox"]):not([type="radio"]), .dark select:not([class*="bg-"]), .dark textarea:not([class*="bg-"])':
           { backgroundColor: SURFACE },
         /* Forms 0.3.2 puts a 2px white ring offset around a focused checkbox
          * or radio, which the kit Checkbox's `focus:ring-0` keeps */

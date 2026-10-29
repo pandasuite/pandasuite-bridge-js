@@ -438,6 +438,24 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
     });
 
     if (version === '2.1') {
+      test('a checked box without a background keeps its fill in dark', () => {
+        const fill = (type, isDark) =>
+          themed
+            .render(
+              `<input type="${type}" class="form-${type} text-indigo-600">`,
+              {
+                dark: isDark,
+                states: ['checked'],
+              },
+            )
+            .value('background-color');
+
+        assert.deepEqual(
+          [fill('checkbox', true), fill('radio', true)],
+          ['currentColor', 'currentColor'],
+        );
+      });
+
       test('the focused kit 2.x Checkbox has no white halo in dark', () => {
         const offset = (isDark) =>
           themed
