@@ -89,11 +89,19 @@ const withOpacity = (hex, opacityVariable) =>
 
 /* The 600 text shades stay literal, and sit on swapped tints and on the
  * surface (the kit's Button, Alert and Loader, the editors' key names): in
- * dark they take their 300, the Studio's accent text */
+ * dark they take their 300, the Studio's accent text. A checkbox or radio
+ * keeps its 600: forms paints its checked fill with it, and a fill does not
+ * move. (A `:not()` on the first rule would outrank the hover texts.) */
 const darkText = Object.fromEntries(
-  ['purple', 'indigo', 'blue', 'red'].map((family) => [
-    `.dark .text-${family}-600`,
-    { color: withOpacity(colors[family][300], '--tw-text-opacity') },
+  ['purple', 'indigo', 'blue', 'red'].flatMap((family) => [
+    [
+      `.dark .text-${family}-600`,
+      { color: withOpacity(colors[family][300], '--tw-text-opacity') },
+    ],
+    [
+      `.dark .text-${family}-600[type="checkbox"], .dark .text-${family}-600[type="radio"]`,
+      { color: withOpacity(colors[family][600], '--tw-text-opacity') },
+    ],
   ]),
 );
 

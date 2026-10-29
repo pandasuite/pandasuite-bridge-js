@@ -66,6 +66,8 @@ const KIT_3 = {
   loaderDescription: 'text-gray-500 text-xs',
   dropdown:
     'appearance-none rounded bg-gray-100 px-3 py-1 text-sm transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400',
+  checkbox:
+    'form-checkbox rounded border-transparent bg-gray-100 text-purple-600 transition focus:border-transparent focus:bg-gray-200 focus:ring-2 focus:ring-purple-400 focus:outline-none hover:bg-gray-200',
   checkboxLabel:
     '<label class="inline-flex items-center gap-2"><span class="text-sm">',
 };
@@ -343,6 +345,20 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
       assert.equal(dark('<span class="text-white">', 'color'), rgb('#ffffff'));
     });
 
+    test('accent text takes its 300 in dark, and a hover text still wins', () => {
+      assert.deepEqual(
+        ['purple', 'indigo', 'blue', 'red'].map((family) =>
+          dark(`<p class="text-${family}-600">`, 'color'),
+        ),
+        [rgb('#c4b5fd'), rgb('#a5b4fc'), rgb('#93c5fd'), rgb('#fca5a5')],
+      );
+      /* HTTP and Search's Delete: `hover:text-indigo-900`, whose dark is the 100 */
+      assert.equal(
+        dark(`${TABLE_ROW}${DELETE}`, 'color', { states: ['hover'] }),
+        rgb('#e0e7ff'),
+      );
+    });
+
     test('the action green rests on the Studio action and darkens on hover, as in light', () => {
       const button = `<button class="${KIT_2.primaryButton}">`;
 
@@ -438,7 +454,7 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
     });
 
     if (version === '2.1') {
-      test('a checked box without a background keeps its fill in dark', () => {
+      test('a checked box or radio keeps its fill in dark', () => {
         const fill = (type, isDark) =>
           themed
             .render(
@@ -452,7 +468,25 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
 
         assert.deepEqual(
           [fill('checkbox', true), fill('radio', true)],
-          ['currentColor', 'currentColor'],
+          [rgb('#4f46e5'), rgb('#4f46e5')],
+        );
+      });
+
+      test('the checked kit 3.x Checkbox keeps its fill and its mark in dark', () => {
+        const fill = (isDark) =>
+          themed
+            .render(`<input type="checkbox" class="${KIT_3.checkbox}">`, {
+              dark: isDark,
+              states: ['checked'],
+            })
+            .value('background-color');
+        /* Forms draws the mark white */
+        const mark = (isDark) => contrast(rgb('#ffffff'), fill(isDark));
+
+        assert.equal(fill(true), rgb('#7c3aed'));
+        assert.ok(
+          mark(true) >= mark(false),
+          `white mark: ${mark(true).toFixed(2)}:1 in dark, ${mark(false).toFixed(2)}:1 in light`,
         );
       });
 

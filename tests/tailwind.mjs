@@ -1,7 +1,7 @@
 /* Test runner only. Compiles a Tailwind 2 stylesheet and answers what Chromium
  * would paint for one element of it: the winning declaration of a property for a
  * class list (selectors, `:hover`/`:focus`, a `.dark` <html>, an inline style),
- * its `var()` resolved, its colours written `rgb()`. Enough of CSS for the
+ * its `var()` and `currentColor` resolved, its colours written `rgb()`. Enough of CSS for the
  * stylesheets Tailwind 2 writes, not a browser. */
 
 import { createRequire } from 'node:module';
@@ -607,6 +607,10 @@ export class Stylesheet {
       const fallback = this.userAgent(element, property, pseudoElement);
 
       return fallback && normalizeColors(fallback);
+    }
+    /* Forms paints a checked box with its text colour */
+    if (property !== 'color' && value.toLowerCase() === 'currentcolor') {
+      return this.value(element, 'color', pseudoElement);
     }
     return normalizeColors(
       substituteVariables(value, (name) =>
