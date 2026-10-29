@@ -576,10 +576,13 @@ export class Stylesheet {
   }
 
   /* What Chromium 87 paints where no rule says: the root's text by its
-   * colour scheme, and a white field, which it does not darken */
+   * colour scheme, and a white field, which it does not darken. A scheme
+   * list (`light dark`) lets the OS choose, taken dark here. */
   userAgent(element, property, pseudoElement) {
     if (property === 'color' && element.tag === 'html') {
-      return this.declared(element, 'color-scheme') === 'dark'
+      return (this.declared(element, 'color-scheme') ?? '')
+        .split(/\s+/)
+        .includes('dark')
         ? '#ffffff'
         : '#000000';
     }

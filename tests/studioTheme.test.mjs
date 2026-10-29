@@ -312,6 +312,23 @@ for (const [version, setup] of Object.entries(VERSIONS)) {
         ),
         null,
       );
+      /* The block's own rules apply under `.dark`, but `:root`, which only
+       * sets the light values and a light scheme, and forms' caret */
+      assert.deepEqual(
+        block
+          .filter(({ type }) => type === 'rule')
+          .flatMap(({ selectors }) => selectors)
+          .filter(
+            (selector) => selector !== '.dark' && !selector.startsWith('.dark '),
+          ),
+        [':root', '.form-select'],
+      );
+      assert.deepEqual(
+        root.nodes
+          .filter(({ type, prop }) => type === 'decl' && !prop.startsWith('--c-'))
+          .map(({ prop, value }) => `${prop}: ${value}`),
+        ['color-scheme: light'],
+      );
     });
 
     test('dark uses the Studio roles', () => {
