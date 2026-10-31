@@ -20,6 +20,9 @@ PandaBridge.waitingSend = [];
 
 PandaBridge.bridge = null;
 PandaBridge.isStudio = false;
+PandaBridge.theme = undefined;
+PandaBridge.themeReceive = [];
+PandaBridge.isFollowingStudioTheme = false;
 
 PandaBridge.resources = [];
 PandaBridge.properties = {};
@@ -38,6 +41,7 @@ PandaBridge.RESOLVE_DEEP_SHORT_TAGS = 'resolveDeepShortTags';
 
 PandaBridge.STUDIO = '__ps_studio';
 PandaBridge.LANGUAGE = '__ps_language';
+PandaBridge.THEME = '__ps_theme';
 PandaBridge.UNIQUE_ID = '__ps_id';
 PandaBridge.BINDABLE = '__ps_bindable';
 PandaBridge.SCREENS = '__ps_screens';
@@ -167,6 +171,9 @@ function connectWebViewJavascriptBridge(callback) {
           });
           PandaBridge.listen(PandaBridge.LANGUAGE, (args) => {
             PandaBridge.currentLanguage = args && args.language;
+          });
+          PandaBridge.listen(PandaBridge.THEME, (args) => {
+            setTheme(args && args.theme);
           });
           callback({
             init(receiveCallBack) {
@@ -482,6 +489,49 @@ PandaBridge.listen(PandaBridge.UPDATE, (args) => {
 
 PandaBridge.onUpdate = function onUpdate(callBack) {
   PandaBridge.updateCallBack = callBack;
+};
+
+/* The state is set before anyone is told. Anything but a known theme is ignored,
+ * and so is a repeat: a subscriber hears each value change once. */
+function setTheme(value) {
+  if ((value !== 'light' && value !== 'dark') || value === PandaBridge.theme) {
+    return;
+  }
+
+  PandaBridge.theme = value;
+  /* A copy: a subscriber may unsubscribe itself while it is being told */
+  PandaBridge.themeReceive.slice().forEach((callback) => {
+    callback(value);
+  });
+}
+
+PandaBridge.onThemeChange = function onThemeChange(callback) {
+  PandaBridge.themeReceive.push(callback);
+
+  if (PandaBridge.theme) {
+    callback(PandaBridge.theme);
+  }
+
+  return () => {
+    const index = PandaBridge.themeReceive.indexOf(callback);
+
+    if (index !== -1) {
+      PandaBridge.themeReceive.splice(index, 1);
+    }
+  };
+};
+
+/* The opt-in: the document is only touched by a component that asked for it */
+PandaBridge.followStudioTheme = function followStudioTheme() {
+  if (PandaBridge.isFollowingStudioTheme) {
+    return;
+  }
+  PandaBridge.isFollowingStudioTheme = true;
+
+  PandaBridge.onThemeChange((theme) => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.style.colorScheme = theme;
+  });
 };
 
 PandaBridge.getSnapshotData = function getSnapshotData(callBack) {

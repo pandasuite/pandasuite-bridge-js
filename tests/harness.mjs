@@ -40,6 +40,15 @@ globalThis.window = {
   },
   /* The arm key minting takes in production; a test removes it for the other */
   crypto: globalThis.crypto,
+  /* A dark OS, so a theme read from it instead of the Studio would show */
+  matchMedia: (query) => ({
+    media: query,
+    matches: query === '(prefers-color-scheme: dark)',
+    addListener() {},
+    removeListener() {},
+    addEventListener() {},
+    removeEventListener() {},
+  }),
 };
 
 /* `navigator` is a getter-only global on Node */
@@ -48,10 +57,28 @@ Object.defineProperty(globalThis, 'navigator', {
   configurable: true,
 });
 
+/* What a theme test reads back from `<html>`: its classes and inline style */
+const rootClasses = new Set();
+
 globalThis.document = {
   addEventListener() {},
   createElement: () => ({ style: {} }),
-  documentElement: { appendChild() {}, removeChild() {} },
+  documentElement: {
+    appendChild() {},
+    removeChild() {},
+    classList: {
+      toggle(name, force) {
+        if (force === undefined ? !rootClasses.has(name) : force) {
+          rootClasses.add(name);
+        } else {
+          rootClasses.delete(name);
+        }
+        return rootClasses.has(name);
+      },
+      contains: (name) => rootClasses.has(name),
+    },
+    style: { colorScheme: '' },
+  },
 };
 
 const post = (data) => {
@@ -64,6 +91,15 @@ export const PandaBridge = module.default;
 
 /* Connect once: the handshake is what hands the library its bridge */
 post('PandaJavascriptBridgeReady');
+
+/* The theme state once imported and connected, before any reset rewrites it */
+export const themeAtImport = {
+  theme: PandaBridge.theme,
+  subscribers: PandaBridge.themeReceive.length,
+  isFollowingStudioTheme: PandaBridge.isFollowingStudioTheme,
+  rootClasses: [...rootClasses],
+  colorScheme: document.documentElement.style.colorScheme,
+};
 
 /* Deliver an incoming message, the shape `bridge.init` parses */
 export const receive = (event, args) => post(JSON.stringify({ event, args }));
@@ -92,6 +128,11 @@ export const reset = () => {
   refused.length = 0;
   refuseToSend = null;
   window.crypto = globalThis.crypto;
+  PandaBridge.theme = undefined;
+  PandaBridge.themeReceive = [];
+  PandaBridge.isFollowingStudioTheme = false;
+  rootClasses.clear();
+  document.documentElement.style.colorScheme = '';
 };
 
 /* The outcome of the last message sent */
