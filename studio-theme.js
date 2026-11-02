@@ -5,7 +5,7 @@
  *     require('pandasuite-bridge/studio-theme'),
  *   ]
  *
- * with `PandaBridge.followStudioTheme()`, which sets `dark` on <html>.
+ * with `PandaBridge.followStudioAppearance()`, which sets `dark` on <html>.
  *
  * Editors are written with Tailwind's light palette. Rather than a `dark:`
  * variant on every class, the shades that carry roles read CSS variables, and

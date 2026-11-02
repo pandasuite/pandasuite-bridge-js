@@ -89,14 +89,21 @@ const module = await import('../src/index.js');
 
 export const PandaBridge = module.default;
 
+/* Whether the appearance is listened to before the web handshake, that is on
+ * every transport, the native ones included */
+export const appearanceListenedBeforeHandshake = Boolean(
+  PandaBridge.eventReceive.__ps_appearance,
+);
+
 /* Connect once: the handshake is what hands the library its bridge */
 post('PandaJavascriptBridgeReady');
 
-/* The theme state once imported and connected, before any reset rewrites it */
-export const themeAtImport = {
-  theme: PandaBridge.theme,
-  subscribers: PandaBridge.themeReceive.length,
-  isFollowingStudioTheme: PandaBridge.isFollowingStudioTheme,
+/* The appearance state once imported and connected, before any reset rewrites it */
+export const appearanceAtImport = {
+  appearance: PandaBridge.appearance,
+  subscribers: PandaBridge.appearanceReceive.length,
+  isFollowingStudioAppearance: PandaBridge.isFollowingStudioAppearance,
+  isStudio: PandaBridge.isStudio,
   rootClasses: [...rootClasses],
   colorScheme: document.documentElement.style.colorScheme,
 };
@@ -128,9 +135,10 @@ export const reset = () => {
   refused.length = 0;
   refuseToSend = null;
   window.crypto = globalThis.crypto;
-  PandaBridge.theme = undefined;
-  PandaBridge.themeReceive = [];
-  PandaBridge.isFollowingStudioTheme = false;
+  PandaBridge.appearance = undefined;
+  PandaBridge.appearanceReceive = [];
+  PandaBridge.isFollowingStudioAppearance = false;
+  PandaBridge.isStudio = false;
   rootClasses.clear();
   document.documentElement.style.colorScheme = '';
 };

@@ -20,9 +20,9 @@ PandaBridge.waitingSend = [];
 
 PandaBridge.bridge = null;
 PandaBridge.isStudio = false;
-PandaBridge.theme = undefined;
-PandaBridge.themeReceive = [];
-PandaBridge.isFollowingStudioTheme = false;
+PandaBridge.appearance = undefined;
+PandaBridge.appearanceReceive = [];
+PandaBridge.isFollowingStudioAppearance = false;
 
 PandaBridge.resources = [];
 PandaBridge.properties = {};
@@ -41,7 +41,7 @@ PandaBridge.RESOLVE_DEEP_SHORT_TAGS = 'resolveDeepShortTags';
 
 PandaBridge.STUDIO = '__ps_studio';
 PandaBridge.LANGUAGE = '__ps_language';
-PandaBridge.THEME = '__ps_theme';
+PandaBridge.APPEARANCE = '__ps_appearance';
 PandaBridge.UNIQUE_ID = '__ps_id';
 PandaBridge.BINDABLE = '__ps_bindable';
 PandaBridge.SCREENS = '__ps_screens';
@@ -168,12 +168,10 @@ function connectWebViewJavascriptBridge(callback) {
         if (event.data === 'PandaJavascriptBridgeReady') {
           PandaBridge.listen(PandaBridge.STUDIO, (args) => {
             PandaBridge.isStudio = args || true;
+            applyStudioAppearance();
           });
           PandaBridge.listen(PandaBridge.LANGUAGE, (args) => {
             PandaBridge.currentLanguage = args && args.language;
-          });
-          PandaBridge.listen(PandaBridge.THEME, (args) => {
-            setTheme(args && args.theme);
           });
           callback({
             init(receiveCallBack) {
@@ -491,47 +489,92 @@ PandaBridge.onUpdate = function onUpdate(callBack) {
   PandaBridge.updateCallBack = callBack;
 };
 
-/* The state is set before anyone is told. Anything but a known theme is ignored,
- * and so is a repeat: a subscriber hears each value change once. */
-function setTheme(value) {
-  if ((value !== 'light' && value !== 'dark') || value === PandaBridge.theme) {
+/* Field by field, so the order of the keys does not count */
+function isSameAppearance(next) {
+  const current = PandaBridge.appearance;
+  const keys = Object.keys(next);
+
+  return (
+    Boolean(current) &&
+    keys.length === Object.keys(current).length &&
+    keys.every(
+      (key) => JSON.stringify(next[key]) === JSON.stringify(current[key]),
+    )
+  );
+}
+
+/* The appearance a system editor gets from the Studio, on any transport. `theme`
+ * is kept when it is 'light' or 'dark', other fields as they come, for settings
+ * to come. A change replaces the frozen object before anyone is told; a repeat
+ * is ignored. */
+function setAppearance(args) {
+  if (!isObject(args) || isArray(args)) {
     return;
   }
 
-  PandaBridge.theme = value;
+  const next = { ...args };
+
+  if (next.theme !== 'light' && next.theme !== 'dark') {
+    delete next.theme;
+  }
+  if (Object.keys(next).length === 0 || isSameAppearance(next)) {
+    return;
+  }
+
+  PandaBridge.appearance = Object.freeze(next);
   /* A copy: a subscriber may unsubscribe itself while it is being told */
-  PandaBridge.themeReceive.slice().forEach((callback) => {
-    callback(value);
+  PandaBridge.appearanceReceive.slice().forEach((callback) => {
+    callback(PandaBridge.appearance);
   });
 }
 
-PandaBridge.onThemeChange = function onThemeChange(callback) {
-  PandaBridge.themeReceive.push(callback);
+PandaBridge.listen(PandaBridge.APPEARANCE, setAppearance);
 
-  if (PandaBridge.theme) {
-    callback(PandaBridge.theme);
+PandaBridge.onAppearanceChange = function onAppearanceChange(callback) {
+  PandaBridge.appearanceReceive.push(callback);
+
+  if (PandaBridge.appearance) {
+    callback(PandaBridge.appearance);
   }
 
   return () => {
-    const index = PandaBridge.themeReceive.indexOf(callback);
+    const index = PandaBridge.appearanceReceive.indexOf(callback);
 
     if (index !== -1) {
-      PandaBridge.themeReceive.splice(index, 1);
+      PandaBridge.appearanceReceive.splice(index, 1);
     }
   };
 };
 
-/* The opt-in: the document is only touched by a component that asked for it */
-PandaBridge.followStudioTheme = function followStudioTheme() {
-  if (PandaBridge.isFollowingStudioTheme) {
+/* Only in the Studio: an appearance a viewer may send one day must not reach a
+ * project through this opt-in. `__ps_studio` applies it again, so the order of
+ * the two messages does not matter. */
+function applyStudioAppearance() {
+  const { appearance } = PandaBridge;
+
+  if (
+    !PandaBridge.isFollowingStudioAppearance ||
+    !PandaBridge.isStudio ||
+    !appearance ||
+    !appearance.theme
+  ) {
     return;
   }
-  PandaBridge.isFollowingStudioTheme = true;
+  document.documentElement.classList.toggle(
+    'dark',
+    appearance.theme === 'dark',
+  );
+  document.documentElement.style.colorScheme = appearance.theme;
+}
 
-  PandaBridge.onThemeChange((theme) => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    document.documentElement.style.colorScheme = theme;
-  });
+/* The opt-in: the document is only touched by a component that asked for it */
+PandaBridge.followStudioAppearance = function followStudioAppearance() {
+  if (PandaBridge.isFollowingStudioAppearance) {
+    return;
+  }
+  PandaBridge.isFollowingStudioAppearance = true;
+
+  PandaBridge.onAppearanceChange(applyStudioAppearance);
 };
 
 PandaBridge.getSnapshotData = function getSnapshotData(callBack) {

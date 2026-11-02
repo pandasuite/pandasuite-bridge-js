@@ -29,6 +29,15 @@ declare module 'pandasuite-bridge' {
   /** The Studio's colour theme. */
   export type StudioTheme = 'light' | 'dark';
 
+  /**
+   * How the Studio looks, sent to the editor of a system component. `theme` is
+   * there when known; other fields, for settings to come, are kept as sent.
+   */
+  export type Appearance = Readonly<{
+    theme?: StudioTheme;
+    [key: string]: unknown;
+  }>;
+
   export interface PandaBridgeType {
     // Properties
     initCallBack: (() => void) | null;
@@ -45,14 +54,14 @@ declare module 'pandasuite-bridge' {
     isCoreInitialized: boolean;
     currentLanguage?: string;
     /**
-     * The theme of the Studio, sent to the editor of a system component:
-     * `undefined` until the Studio sends one, then `'light'` or `'dark'`. The
-     * Studio sends it when the editor loads and on every change; any other value
-     * is ignored. Nothing is inferred from the OS preference and nothing is
-     * stored. It stays `undefined` outside the Studio, in a published app, and on
-     * the native iOS and Android bridges.
+     * The appearance of the Studio, sent to the editor of a system component:
+     * `undefined` until one is sent, then a frozen object, replaced on each
+     * change. The Studio sends it when the editor loads and on every change. A
+     * `theme` other than `'light'` or `'dark'` is dropped; other fields are kept.
+     * Nothing is inferred from the OS preference and nothing is stored. It is
+     * listened to on every transport; today only the Studio sends it.
      */
-    theme?: StudioTheme;
+    appearance?: Appearance;
 
     // Constants
     INITIALIZE: string;
@@ -65,8 +74,8 @@ declare module 'pandasuite-bridge' {
     RESOLVE_DEEP_SHORT_TAGS: string;
     STUDIO: string;
     LANGUAGE: string;
-    /** The event the Studio sends its theme with: `{ theme: StudioTheme }`. */
-    THEME: string;
+    /** The event the appearance comes with: `Appearance`. */
+    APPEARANCE: string;
     UNIQUE_ID: string;
     BINDABLE: string;
     SCREENS: string;
@@ -119,7 +128,7 @@ declare module 'pandasuite-bridge' {
     /**
      * With no argument, removes every listener, the bridge's own included:
      * those of `__ps_initialize` and `__ps_update`, which feed `onLoad` and
-     * `onUpdate`, of `__ps_studio`, `__ps_language` and `__ps_theme`, and those
+     * `onUpdate`, of `__ps_studio`, `__ps_language` and `__ps_appearance`, and those
      * of pending `Binder` calls.
      */
     unlisten(): void;
@@ -129,20 +138,21 @@ declare module 'pandasuite-bridge' {
     onLoad(callback: (data: PandaData) => void): void;
     onUpdate(callback: (data: PandaData) => void): void;
     /**
-     * Follow the theme of the Studio, for what the document cannot do alone (a
-     * JS widget such as a JSON viewer or a map). `callback` is called at once if
-     * a theme is already known, then each time the value changes, never twice
-     * with the same one. Returns a function that unsubscribes.
+     * Follow the appearance, for what the document cannot do alone (a JS widget
+     * such as a JSON viewer or a map). `callback` is called at once if an
+     * appearance is already known, then with each new one, never twice with the
+     * same. Returns a function that unsubscribes.
      *
-     * It does not touch the document: see `followStudioTheme()` for that.
+     * It does not touch the document: see `followStudioAppearance()` for that.
      */
-    onThemeChange(callback: (theme: StudioTheme) => void): () => void;
+    onAppearanceChange(callback: (appearance: Appearance) => void): () => void;
     /**
      * The opt-in of a component whose editor supports dark. From this call on,
-     * each theme of the Studio is applied to `<html>`: the `dark` class is
-     * toggled and `style.colorScheme` is set to the theme. Before any theme, and
-     * outside the Studio, it does nothing; calling it twice is harmless. A
-     * component that never calls it keeps its document untouched.
+     * the theme of each appearance is applied to `<html>`, in the Studio only:
+     * the `dark` class is toggled and `style.colorScheme` is set to the theme.
+     * Before any theme, and outside the Studio, it does nothing, whatever sends
+     * an appearance; calling it twice is harmless. A component that never calls
+     * it keeps its document untouched.
      *
      * A Tailwind 2 editor also lists the bridge's theme plugin after the forms
      * plugin, which turns its light markup dark under `html.dark` and leaves
@@ -155,11 +165,11 @@ declare module 'pandasuite-bridge' {
      * indigo, purple) gets Tailwind's defaults in light, and a themed shade it
      * extends keeps its own value in dark.
      *
-     * An editor following the Studio theme must not call `takeScreenshot()`:
+     * An editor following the Studio appearance must not call `takeScreenshot()`:
      * system units have no project rendering, and a themed capture would be saved
      * as a thumbnail.
      */
-    followStudioTheme(): void;
+    followStudioAppearance(): void;
     getSnapshotData(callback: (args: any[]) => any): void;
     setSnapshotData(callback: (data: SnapshotData) => void): void;
     getScreenshot(
