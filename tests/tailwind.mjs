@@ -419,7 +419,7 @@ const inlineDeclarations = (style) =>
 
 /* `<div class="bg-white"><span class="text-gray-400">`: the chain down to the
  * innermost element, under `<html>` and `<body>`. In dark, <html> carries
- * what `followStudioTheme()` sets: the `dark` class and its colour scheme. */
+ * what `followStudioAppearance()` sets: the `dark` class and its colour scheme. */
 const parseMarkup = (markup, { dark, states, style }) => {
   const html = {
     tag: 'html',
