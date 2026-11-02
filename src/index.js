@@ -489,6 +489,20 @@ PandaBridge.onUpdate = function onUpdate(callBack) {
   PandaBridge.updateCallBack = callBack;
 };
 
+/* Field by field, so the order of the keys does not count */
+function isSameAppearance(next) {
+  const current = PandaBridge.appearance;
+  const keys = Object.keys(next);
+
+  return (
+    Boolean(current) &&
+    keys.length === Object.keys(current).length &&
+    keys.every(
+      (key) => JSON.stringify(next[key]) === JSON.stringify(current[key]),
+    )
+  );
+}
+
 /* The appearance a system editor gets from the Studio, on any transport. `theme`
  * is kept when it is 'light' or 'dark', other fields as they come, for settings
  * to come. A change replaces the frozen object before anyone is told; a repeat
@@ -503,10 +517,7 @@ function setAppearance(args) {
   if (next.theme !== 'light' && next.theme !== 'dark') {
     delete next.theme;
   }
-  if (
-    Object.keys(next).length === 0 ||
-    JSON.stringify(next) === JSON.stringify(PandaBridge.appearance)
-  ) {
+  if (Object.keys(next).length === 0 || isSameAppearance(next)) {
     return;
   }
 

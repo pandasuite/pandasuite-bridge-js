@@ -79,6 +79,18 @@ describe('onAppearanceChange', () => {
     assert.notEqual(heard[0], heard[1]);
   });
 
+  test('ignores a repeat whose fields come in another order', () => {
+    const heard = [];
+
+    PandaBridge.onAppearanceChange((appearance) => heard.push(appearance));
+    send({ theme: 'dark', contrast: 'more' });
+    const first = PandaBridge.appearance;
+    send({ contrast: 'more', theme: 'dark' });
+
+    assert.equal(heard.length, 1);
+    assert.equal(PandaBridge.appearance, first);
+  });
+
   test('calls a late subscriber at once with the known appearance', () => {
     const heard = [];
 
