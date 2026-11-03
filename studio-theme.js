@@ -9,7 +9,7 @@
  *
  * Editors are written with Tailwind's light palette. Rather than a `dark:`
  * variant on every class, the shades that carry roles read CSS variables, and
- * `.dark` swaps them, as the dashboard does (Bamboo's `tailwind.config.js`):
+ * `.dark` swaps them, as the PandaSuite dashboard does:
  * the greys run the other way, the soft tints of the accents become deep ones
  * and their text shades light ones. The light values are the installed
  * Tailwind's own defaults, so an editor renders the same until `.dark` is set,
